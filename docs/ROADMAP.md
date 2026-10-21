@@ -20,7 +20,10 @@
 
 ## Stage 2 — save safety and injection (partially started)
 - [x] Create independent, checksum-verified copies of selected ATS saves
-- [x] Include read-only format signature classification
+- [x] Include read-only format signature classification for SiiN, ScsC, BSII and 3nK
+- [x] Parse existing `job_offer_data` from a separately decoded SiiNunit copy
+- [x] Copy real offer cargo/trailer references into JSON draft template metadata
+- [x] Test malformed/encoded input rejection and unchanged source saves
 - [ ] Gather anonymized disposable test saves with game version and active mods recorded
 - [ ] Decode known ScsC/BSII save versions, fail closed on unsupported data
 - [ ] Generate a real Freight Market job using proven cargo/trailer/company unit references

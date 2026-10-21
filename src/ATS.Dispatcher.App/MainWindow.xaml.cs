@@ -204,8 +204,18 @@ public partial class MainWindow : Window
         try
         {
             var job = JobFileService.Import(dialog.FileName);
-            _selectedTemplate = null;
             ReferenceOfferInput.SelectedIndex = -1;
+            _selectedTemplate = string.IsNullOrWhiteSpace(job.ReferenceOfferUnit)
+                ? null
+                : new SaveOfferTemplate(
+                    job.ReferenceOfferUnit, job.ReferenceTarget,
+                    job.ReferenceCargoUnit, job.ReferenceTrailerVariant,
+                    job.ReferenceTrailerDefinition, job.ReferenceCompanyTruck,
+                    job.ReferenceUnitsCount, null, null);
+            ReferenceOfferStatus.Text = _selectedTemplate is null
+                ? "Imported draft without a known game-offer reference."
+                : "Imported draft with reference offer " + _selectedTemplate.UnitId +
+                  " (not an active in-game contract).";
             NameInput.Text = job.Name;
             OriginInput.Text = job.OriginCity;
             OriginCompanyInput.Text = job.OriginCompany;
