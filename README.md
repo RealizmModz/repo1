@@ -1,5 +1,10 @@
 # ATS Custom Freight Dispatcher
 
+> **End goal:** An ATS-style Freight/Cargo Market with interactive map on the left, searchable cargo/job list on the right, and editable pickup, destination, trailer and route before **verified** in-game dispatch.
+
+**Project direction:** [Master start-to-finish roadmap](docs/ROADMAP.md) · [Finished UI/product vision](docs/PRODUCT_VISION.md) · [Architecture and safety plan](docs/TECHNICAL_PLAN.md)
+
+
 A Windows .NET 8 WPF desktop prototype for planning custom hauls in American Truck Simulator.
 
 **Status: planning + catalog checks + game-offer inspection + verified save backups + experimental cargo-flow mod export.** This is NOT yet a working in-game job injector. It does not change Freight Market offers, gameplay GPS routes, requested payouts, or ATS saves.
