@@ -80,7 +80,7 @@
                 <TextBlock Text="AMERICAN TRUCK SIMULATOR • INSPIRED FREIGHT PLANNER"
                            Foreground="#E8A23A" FontWeight="Bold" FontSize="11"/>
                 <TextBlock Text="CUSTOM DISPATCHER" FontSize="29" FontWeight="Bold"
-                           CharacterSpacing="1"/>
+                          />
             </StackPanel>
             <StackPanel Grid.Column="1" VerticalAlignment="Center">
                 <TextBlock Text="PLANNER MODE" Foreground="#E8A23A"
@@ -275,6 +275,8 @@
                             <StackPanel>
                                 <TextBlock Text="EDIT YOUR DISPATCH" FontWeight="Bold"
                                            Foreground="#E8A23A" FontSize="15"/>
+                                <TextBlock Text="Job name" Style="{StaticResource FieldLabel}"/>
+                                <TextBox x:Name="NameBox" TextChanged="DraftChanged"/>
                                 <TextBlock Text="Pickup city" Style="{StaticResource FieldLabel}"/>
                                 <TextBox x:Name="OriginBox" TextChanged="DraftChanged"/>
                                 <TextBlock Text="Pickup company (optional)" Style="{StaticResource FieldLabel}"/>
