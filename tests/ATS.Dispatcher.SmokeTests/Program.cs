@@ -210,6 +210,39 @@ try
     Assert(inspection.Offers[0].TrailerDefinition == "trailer_def.steel.flatbed",
         "Offer trailer definition parsing failed");
     Assert(inspection.Offers[1].Target == "receiver.cheyenne", "Second offer not parsed");
+
+    var board = FreightBoardService.FromOffers(inspection.Offers);
+    Assert(board.Count == 2 && board.All(x => !x.IsDemo), "Actual offers marked as demo");
+    Assert(board[0].Detail.Contains("2147 km", StringComparison.Ordinal),
+        "Original game offer distance lost");
+    Assert(FreightBoardService.Search(board, "steel").Count == 1,
+        "Cargo search did not filter cards");
+    Assert(FreightBoardService.Search(board, "CHEYENNE").Count == 1,
+        "Destination search should be case insensitive");
+    Assert(FreightBoardService.Demonstration().All(x => x.IsDemo),
+        "Illustrative entries must explicitly say demo");
+    Assert(FreightBoardService.SchematicStops([]) == "DIRECT (schematic)",
+        "Direct schematic route label incorrect");
+    Assert(FreightBoardService.SchematicStops(["Cheyenne"]) == "VIA Cheyenne",
+        "Waypoint label incorrect");
+
+    var beforeOffers = new SaveOfferInspection(2, inspection.Offers, false,
+        GameSaveFormat.PlainTextSii);
+    var modified = inspection.Offers[0] with { Target = "receiver.denver" };
+    var added = inspection.Offers[1] with { UnitId = "_nameless.new" };
+    var afterOffers = new SaveOfferInspection(2, [modified, added], false,
+        GameSaveFormat.PlainTextSii);
+    var diff = OfferSnapshotDiffService.Compare(beforeOffers, afterOffers);
+    Assert(diff.Modified == 1 && diff.Removed == 1 && diff.Added == 1,
+        "Before/after offer comparison failed");
+    AssertThrows<InvalidDataException>(() => OfferSnapshotDiffService.Compare(
+        new SaveOfferInspection(100000, inspection.Offers, true, GameSaveFormat.PlainTextSii),
+        afterOffers), "Comparison should reject truncated observations");
+    AssertThrows<InvalidDataException>(() => OfferSnapshotDiffService.Compare(
+        new SaveOfferInspection(2, [inspection.Offers[0], inspection.Offers[0]], false,
+            GameSaveFormat.PlainTextSii),
+        afterOffers), "Comparison should reject duplicate unit IDs");
+
     Assert(File.ReadAllBytes(decoded).SequenceEqual(before), "Inspector modified decoded save");
 
     var malformed = Path.Combine(offersFixtureRoot, "incomplete.sii");
