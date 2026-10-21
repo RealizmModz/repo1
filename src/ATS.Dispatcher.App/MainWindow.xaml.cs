@@ -10,6 +10,7 @@ namespace ATS.Dispatcher.App;
 public partial class MainWindow : Window
 {
     private GameCatalog? _catalog;
+    private SaveOfferTemplate? _selectedTemplate;
     private IReadOnlyList<AtsSaveSlot> _saveSlots = [];
 
     public MainWindow()
@@ -92,6 +93,74 @@ public partial class MainWindow : Window
         }
     }
 
+    private void InspectDecodedSaveClick(object sender, RoutedEventArgs e)
+    {
+        var dialog = new OpenFileDialog
+        {
+            Title = "Select a COPY of a decoded ATS game.sii",
+            Filter = "Decoded ATS save (*.sii;*.txt)|*.sii;*.txt|All files (*.*)|*.*"
+        };
+        if (dialog.ShowDialog(this) != true) return;
+
+        try
+        {
+            var inspection = SaveOfferInspector.Inspect(dialog.FileName);
+            ReferenceOfferInput.ItemsSource = inspection.Offers;
+            ReferenceOfferInput.SelectedIndex = inspection.Offers.Count > 0 ? 0 : -1;
+            _selectedTemplate = null;
+            ReferenceOfferStatus.Text = inspection.OfferCount + " offers scanned; " +
+                inspection.Offers.Count + " usable templates" +
+                (inspection.ResultsTruncated ? " (list limited to first 25,000)" : "") + ".";
+            StatusMessage.Text = "Inspected decoded SII in read-only mode. No changes made.";
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(ex.Message, "Could not inspect decoded save",
+                MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    private void UseOfferTemplateClick(object sender, RoutedEventArgs e)
+    {
+        if (ReferenceOfferInput.SelectedItem is not SaveOfferTemplate offer)
+        {
+            MessageBox.Show("Inspect a decoded save and select an existing job offer first.",
+                "Select a freight template", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        _selectedTemplate = offer;
+        var cargoId = offer.CargoUnit.StartsWith("cargo.", StringComparison.OrdinalIgnoreCase)
+            ? offer.CargoUnit["cargo.".Length..] : offer.CargoUnit;
+        CargoInput.Text = _catalog?.Cargo.FirstOrDefault(x =>
+            string.Equals(x.Id, cargoId, StringComparison.OrdinalIgnoreCase))?.Name ?? cargoId;
+        if (!string.IsNullOrWhiteSpace(offer.TrailerVariant))
+            TrailerInput.Text = offer.TrailerVariant;
+
+        // Only resolve the target city/company if extracted definitions support
+        // that exact ID. The game save target alone is not authoritative for a UI city.
+        var period = offer.Target.IndexOf('.');
+        if (_catalog is not null && period > 0 && period < offer.Target.Length - 1)
+        {
+            var companyId = offer.Target[..period];
+            var cityId = offer.Target[(period + 1)..];
+            var knownCity = _catalog.Cities.FirstOrDefault(x =>
+                string.Equals(x.Id, cityId, StringComparison.OrdinalIgnoreCase));
+            var knownDepot = _catalog.Depots.FirstOrDefault(x =>
+                string.Equals(x.CityId, cityId, StringComparison.OrdinalIgnoreCase) &&
+                string.Equals(x.CompanyId, companyId, StringComparison.OrdinalIgnoreCase));
+            if (knownCity is not null && knownDepot is not null)
+            {
+                DestinationInput.Text = knownCity.Name;
+                DestinationCompanyInput.Text = knownDepot.CompanyName;
+            }
+        }
+        NameInput.Text = "Template: " + cargoId;
+        ReferenceOfferStatus.Text = "Using reference offer: " + offer.UnitId +
+            ". Pickup, destination, trailer and payout must still be validated.";
+        StatusMessage.Text = "Copied reference cargo/trailer into draft; no game save was modified.";
+    }
+
     private void ExportClick(object sender, RoutedEventArgs e)
     {
         try
@@ -135,6 +204,8 @@ public partial class MainWindow : Window
         try
         {
             var job = JobFileService.Import(dialog.FileName);
+            _selectedTemplate = null;
+            ReferenceOfferInput.SelectedIndex = -1;
             NameInput.Text = job.Name;
             OriginInput.Text = job.OriginCity;
             OriginCompanyInput.Text = job.OriginCompany;
@@ -155,6 +226,8 @@ public partial class MainWindow : Window
 
     private void ClearClick(object sender, RoutedEventArgs e)
     {
+        _selectedTemplate = null;
+        ReferenceOfferInput.SelectedIndex = -1;
         NameInput.Clear();
         OriginInput.Text = "";
         OriginCompanyInput.Text = "";
@@ -240,6 +313,13 @@ public partial class MainWindow : Window
             Cargo = CargoInput.Text.Trim(),
             Trailer = TrailerInput.Text.Trim(),
             PaymentUsd = requestedPayment,
+            ReferenceOfferUnit = _selectedTemplate?.UnitId ?? "",
+            ReferenceTarget = _selectedTemplate?.Target ?? "",
+            ReferenceCargoUnit = _selectedTemplate?.CargoUnit ?? "",
+            ReferenceTrailerVariant = _selectedTemplate?.TrailerVariant ?? "",
+            ReferenceTrailerDefinition = _selectedTemplate?.TrailerDefinition ?? "",
+            ReferenceCompanyTruck = _selectedTemplate?.CompanyTruck ?? "",
+            ReferenceUnitsCount = _selectedTemplate?.UnitsCount,
             Waypoints = WaypointsInput.Text.Split(
                     new[] { "\r\n", "\n", "\r" },
                     StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)

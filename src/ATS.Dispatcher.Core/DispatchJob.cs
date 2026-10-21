@@ -20,6 +20,7 @@ public sealed class DispatchJob
     // Optional planning metadata copied from a decoded game's job_offer_data.
     // These values are not written to game saves by this application.
     public string ReferenceOfferUnit { get; set; } = "";
+    public string ReferenceTarget { get; set; } = "";
     public string ReferenceCargoUnit { get; set; } = "";
     public string ReferenceTrailerVariant { get; set; } = "";
     public string ReferenceTrailerDefinition { get; set; } = "";

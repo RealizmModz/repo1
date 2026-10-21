@@ -137,7 +137,96 @@ finally
         Directory.Delete(dataRoot, recursive: true);
 }
 
+
+var offersFixtureRoot = Path.Combine(Path.GetTempPath(),
+    "ats-offers-fixture-" + Guid.NewGuid().ToString("N"));
+try
+{
+    Directory.CreateDirectory(offersFixtureRoot);
+    var decoded = Path.Combine(offersFixtureRoot, "decoded.sii");
+    const string fixture = """
+        SiiNunit
+        {
+        economy : _nameless.demo {
+        game_time: 6000
+        }
+        job_offer_data : _nameless.abc.123 {
+        target: "shipper.los_angeles"
+        expiration_time: 1156913
+        urgency: 2
+        shortest_distance_km: 2147
+        cargo: cargo.steel
+        company_truck: kw_w900
+        trailer_variant: trailer.flatbed
+        trailer_definition: trailer_def.steel.flatbed
+        units_count: 12
+        }
+        job_offer_data : _nameless.abc.456 {
+        target: "receiver.cheyenne"
+        cargo: cargo.logs
+        trailer_variant: trailer.log
+        }
+        }
+        """;
+    File.WriteAllText(decoded, fixture);
+    var before = File.ReadAllBytes(decoded);
+    var inspection = SaveOfferInspector.Inspect(decoded);
+    Assert(inspection.Format == GameSaveFormat.PlainTextSii, "Plain text format misidentified");
+    Assert(inspection.OfferCount == 2 && inspection.Offers.Count == 2, "Offers not counted");
+    Assert(inspection.Offers[0].CargoUnit == "cargo.steel", "Offer cargo parsing failed");
+    Assert(inspection.Offers[0].UnitsCount == 12, "Offer units_count parsing failed");
+    Assert(inspection.Offers[0].ShortestDistanceKm == 2147, "Offer distance parsing failed");
+    Assert(inspection.Offers[0].TrailerDefinition == "trailer_def.steel.flatbed",
+        "Offer trailer definition parsing failed");
+    Assert(inspection.Offers[1].Target == "receiver.cheyenne", "Second offer not parsed");
+    Assert(File.ReadAllBytes(decoded).SequenceEqual(before), "Inspector modified decoded save");
+
+    var malformed = Path.Combine(offersFixtureRoot, "incomplete.sii");
+    File.WriteAllText(malformed, "SiiNunit\njob_offer_data : id {\ntarget: test.city\n");
+    AssertThrows<InvalidDataException>(() => SaveOfferInspector.Inspect(malformed),
+        "Incomplete offer should be rejected");
+    var encrypted = Path.Combine(offersFixtureRoot, "encrypted.sii");
+    File.WriteAllBytes(encrypted, "ScsC"u8.ToArray());
+    AssertThrows<InvalidDataException>(() => SaveOfferInspector.Inspect(encrypted),
+        "Encrypted data should not be inspected as text");
+    var encoded = Path.Combine(offersFixtureRoot, "encoded.sii");
+    File.WriteAllBytes(encoded, "3nK\x01"u8.ToArray());
+    Assert(GameProfileScanner.DetectFormat(encoded) == GameSaveFormat.Encoded3nK,
+        "3nK signature not detected");
+
+    var draft = new DispatchJob
+    {
+        OriginCity = "Rapid City", DestinationCity = "Cheyenne",
+        Cargo = "Steel", Trailer = "Flatbed",
+        ReferenceOfferUnit = inspection.Offers[0].UnitId,
+        ReferenceTarget = inspection.Offers[0].Target,
+        ReferenceCargoUnit = inspection.Offers[0].CargoUnit,
+        ReferenceTrailerDefinition = inspection.Offers[0].TrailerDefinition,
+        ReferenceTrailerVariant = inspection.Offers[0].TrailerVariant,
+        ReferenceUnitsCount = inspection.Offers[0].UnitsCount
+    };
+    var jsonPath = Path.Combine(offersFixtureRoot, "template.json");
+    JobFileService.Export(jsonPath, draft);
+    var restored = JobFileService.Import(jsonPath);
+    Assert(restored.ReferenceTrailerDefinition == "trailer_def.steel.flatbed",
+        "JSON round trip lost trailer reference");
+    Assert(restored.ReferenceTarget == "shipper.los_angeles",
+        "JSON round trip lost offer target");
+}
+finally
+{
+    if (Directory.Exists(offersFixtureRoot))
+        Directory.Delete(offersFixtureRoot, recursive: true);
+}
+
 Console.WriteLine("All ATS Dispatcher smoke tests passed.");
+
+static void AssertThrows<T>(Action action, string message) where T : Exception
+{
+    try { action(); }
+    catch (T) { return; }
+    throw new InvalidOperationException(message);
+}
 
 static void Assert(bool condition, string message)
 {

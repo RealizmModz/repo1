@@ -65,7 +65,6 @@ public static class SaveOfferInspector
         string? id = null;
         var fields = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         bool inside = false;
-        bool pendingOpeningBrace = false;
 
         // Parsing is bounded and only tracks the 9 keys used for preview.
         while (reader.ReadLine() is { } line)
@@ -81,7 +80,6 @@ public static class SaveOfferInspector
                 id = match.Groups["id"].Value;
                 fields.Clear();
                 inside = true;
-                pendingOpeningBrace = false;
                 continue;
             }
             if (trimmed.StartsWith("}", StringComparison.Ordinal))
