@@ -32,6 +32,9 @@ public sealed record SaveOfferInspection(
     // Hash of the exact bytes read from the same locked, read-only stream.
     public string SourceSha256 { get; init; } = "";
     public int MissingRequiredFieldsCount { get; init; }
+    public IReadOnlyDictionary<string, string> ObservedUnitTypes { get; init; } =
+        new Dictionary<string, string>();
+    public bool TopLevelUnitIndexComplete { get; init; }
 }
 
 /// <summary>
@@ -43,6 +46,10 @@ public static class SaveOfferInspector
 {
     private const long MaxBytes = 256L * 1024 * 1024;
     private const int MaxOffers = 25000;
+    private const int MaxIndexedUnits = 250000;
+    private static readonly Regex UnitStart = new(
+        @"^\s*(?<type>[A-Za-z_][A-Za-z_0-9]*)\s*:\s*(?<id>[^\s{}""]+)\s*\{\s*$",
+        RegexOptions.Compiled | RegexOptions.CultureInvariant);
     private static readonly Regex OfferStart = new(
         @"^\s*job_offer_data\s*:\s*(?<id>[^\s{}]+)\s*\{\s*$",
         RegexOptions.Compiled | RegexOptions.CultureInvariant);
@@ -71,6 +78,8 @@ public static class SaveOfferInspector
             detectEncodingFromByteOrderMarks: false);
         var offers = new List<SaveOfferTemplate>();
         var ids = new HashSet<string>(StringComparer.Ordinal);
+        var unitTypes = new Dictionary<string, string>(StringComparer.Ordinal);
+        bool indexComplete = true;
         var fields = new Dictionary<string, string>(StringComparer.Ordinal);
         int count = 0, incomplete = 0, depth = 0, phase = 0;
         string? id = null;
@@ -105,6 +114,18 @@ public static class SaveOfferInspector
                     throw new InvalidDataException("Unexpected data after the SiiNunit envelope.");
 
                 var (opens, closes) = BracesOutsideStrings(text);
+                if (depth == 1 && opens != 0)
+                {
+                    var unit = UnitStart.Match(text);
+                    if (!unit.Success) indexComplete = false;
+                    else
+                    {
+                        if (!unitTypes.TryAdd(unit.Groups["id"].Value, unit.Groups["type"].Value))
+                            throw new InvalidDataException("Duplicate top-level SII unit identifier.");
+                        if (unitTypes.Count > MaxIndexedUnits)
+                            throw new InvalidDataException("Decoded save exceeds the 250,000 unit index limit.");
+                    }
+                }
                 if (id is not null)
                 {
                     if (trimmed == "}")
@@ -196,7 +217,9 @@ public static class SaveOfferInspector
             GameSaveFormat.PlainTextSii)
         {
             SourceSha256 = hash,
-            MissingRequiredFieldsCount = incomplete
+            MissingRequiredFieldsCount = incomplete,
+            ObservedUnitTypes = new System.Collections.ObjectModel.ReadOnlyDictionary<string, string>(unitTypes),
+            TopLevelUnitIndexComplete = indexComplete
         };
     }
 

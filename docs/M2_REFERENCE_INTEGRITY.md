@@ -16,12 +16,20 @@ This is deliberately a limited reader: the envelope must use separate `SiiNunit`
 
 Synthetic smoke regressions cover duplicates, conflicting fields, complete/missing/capped observations, comments and quoted braces, malformed/truncated envelopes, invalid integers/UTF-8, oversize rejection, exact source hashing and unchanged source bytes. These are parser checks, not in-game validation.
 
+## Read-only exact-token reference report
+
+The inspector now indexes up to 250,000 top-level unit headers recognized by its bounded same-line header syntax and rejects duplicate indexed unit IDs. It retains only ID/type pairs for unrelated units, not their profile properties. Unrecognized top-level openings explicitly mark header coverage partial.
+
+`OfferReferenceReport` retains separate target, cargo, trailer variant/definition and company-truck edges for usable retained offers. An exact raw token match is labeled `ObservedUnitHeader` with the observed type; all absent matches are `Unverified`. No prefix rewriting, depot inference, semantic type validation or external-definition resolution is attempted. A complete header-syntax pass does NOT imply a complete relevant game graph.
+
+After a successful decoded-copy import, the market's **Offer reference report** button shows the source hash, counts, syntax coverage and a bounded preview of edges. This report stays local and read-only. Synthetic regressions verify present/absent/external references, partial header coverage, duplicate non-offer IDs, provenance and unchanged copied bytes.
+
 ## Remaining graph research and observation requirements
 
 1. [Implemented for offer inspection] Reject duplicate `job_offer_data` unit IDs within a snapshot; do not silently keep the first or last.
 2. [Implemented for the bounded syntax above] Reject unterminated unit blocks, malformed braces and truncated snapshots. A parser's maximum-record cap must be distinguishable from a complete snapshot.
-3. Track every reference edge separately from its friendly display text. A target/cargo/trailer reference is not proof that the referenced unit exists in the observed subset.
-4. Report unresolved references as **unverified** until a complete relevant unit graph is available, not as definitely invalid when the fixture intentionally omits unrelated units.
+3. [Implemented for the five tracked reference fields; semantic graph validation pending] Track every reference edge separately from its friendly display text. A target/cargo/trailer reference is not proof that the referenced unit exists in the observed subset.
+4. [Implemented as Unverified] Report unresolved references as **unverified** until a complete relevant unit graph is available, not as definitely invalid when the fixture intentionally omits unrelated units.
 5. [Implemented for the eight tracked offer fields] Reject conflicting field values within one unit unless the relevant ATS format establishes a deterministic interpretation.
 6. Preserve source offer distance as reference metadata only; never treat it as distance for an edited draft route.
 7. Do not infer exact depot instances, payout, or waypoint persistence from target/cargo strings alone.

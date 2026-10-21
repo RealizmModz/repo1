@@ -92,6 +92,33 @@ internal static class OfferIntegrityTests
             Check(OfferSnapshotDiffService.Compare(observed, observed).Changes.Count == 0,
                 "Unchanged snapshot should have no differences");
 
+            var linkedPath = Save("linked", Wrap(
+                "cargo_data : cargo.steel {\nname: \"Synthetic steel\"\n}\n" +
+                "company : receiver.city {\n}\n" + Offer("one")));
+            var linkedBytes = File.ReadAllBytes(linkedPath);
+            var linked = SaveOfferInspector.Inspect(linkedPath);
+            var edges = OfferReferenceReport.Build(linked);
+            Check(linked.ObservedUnitTypes.Count == 3 && linked.TopLevelUnitIndexComplete,
+                "Recognized unit headers were not indexed");
+            Check(edges.Count == 2 && edges.All(x =>
+                x.State == OfferReferenceState.ObservedUnitHeader), "Exact reference headers not observed");
+            Check(edges.Single(x => x.Field == "cargo").ObservedUnitType == "cargo_data",
+                "Reference unit type lost");
+            Check(OfferReferenceReport.Build(observed).All(x =>
+                x.State == OfferReferenceState.Unverified), "Absent external units fabricated");
+            var splitHeader = SaveOfferInspector.Inspect(Save("split-header", Wrap(
+                "cargo_data : cargo.steel\n{\n}\n" + Offer("one"))));
+            Check(!splitHeader.TopLevelUnitIndexComplete &&
+                OfferReferenceReport.Build(splitHeader).Single(x => x.Field == "cargo").State ==
+                    OfferReferenceState.Unverified, "Partial header coverage reported as complete");
+            Reject("duplicate-nonoffer", Wrap(
+                "cargo_data : cargo.steel {\n}\ncargo_data : cargo.steel {\n}\n" + Offer("one")));
+            Check(OfferReferenceReport.Summary(linked).Contains(linked.SourceSha256) &&
+                OfferReferenceReport.Summary(observed).Contains("UNVERIFIED"),
+                "Reference preview omitted provenance or uncertainty");
+            Check(File.ReadAllBytes(linkedPath).SequenceEqual(linkedBytes),
+                "Reference report changed source");
+
             var empty = SaveOfferInspector.Inspect(Save("empty", Wrap("")));
             Check(empty.OfferCount == 0 && !empty.ResultsTruncated, "Empty envelope rejected");
             var cap = new StringBuilder();

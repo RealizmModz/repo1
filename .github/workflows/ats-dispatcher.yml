@@ -1,17 +1,23 @@
 name: ATS Dispatcher Windows Build
 
 on:
+  workflow_dispatch:
   push:
     branches: ["feat/ats-dispatcher-mvp"]
   pull_request:
     paths:
       - "src/ATS.Dispatcher.*/**"
       - "tests/ATS.Dispatcher.*/**"
+      - "docs/GETTING_STARTED.md"
       - ".github/workflows/ats-dispatcher.yml"
+
+permissions:
+  contents: read
 
 jobs:
   windows-build:
     runs-on: windows-latest
+    timeout-minutes: 15
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -23,10 +29,41 @@ jobs:
         run: dotnet build src/ATS.Dispatcher.App/ATS.Dispatcher.App.csproj -c Release
       - name: Run core smoke tests
         run: dotnet run --project tests/ATS.Dispatcher.SmokeTests/ATS.Dispatcher.SmokeTests.csproj -c Release
-      - name: Publish Windows build
-        run: dotnet publish src/ATS.Dispatcher.App/ATS.Dispatcher.App.csproj -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -o artifacts/publish
-      - name: Upload prototype artifact
+      - name: Publish portable Windows package with bundled runtime
+        run: dotnet publish src/ATS.Dispatcher.App/ATS.Dispatcher.App.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=false -p:PublishTrimmed=false -p:DebugType=None -p:DebugSymbols=false -o artifacts/publish
+      - name: Add getting-started guide and build identity
+        shell: pwsh
+        run: |
+          Copy-Item -LiteralPath docs/GETTING_STARTED.md -Destination artifacts/publish/START-HERE.txt
+          @(
+            "ATS Dispatcher - portable planning prototype"
+            "Commit: $env:GITHUB_SHA"
+            "Run: https://github.com/$env:GITHUB_REPOSITORY/actions/runs/$env:GITHUB_RUN_ID"
+            "Runtime: bundled Windows x64; no separate .NET install"
+            "In-game job creation: NOT AVAILABLE"
+          ) | Set-Content -LiteralPath artifacts/publish/BUILD-INFO.txt -Encoding utf8
+      - name: Verify portable runtime and launch packaged WPF smoke test
+        shell: pwsh
+        run: |
+          $packageRoot = (Resolve-Path -LiteralPath artifacts/publish).Path
+          $config = Get-Content -LiteralPath (Join-Path $packageRoot ATS.Dispatcher.App.runtimeconfig.json) -Raw | ConvertFrom-Json
+          if (-not $config.runtimeOptions.includedFrameworks -or $config.runtimeOptions.framework -or $config.runtimeOptions.frameworks) {
+            throw "Published application requires an external runtime."
+          }
+          foreach ($requiredFile in @("ATS.Dispatcher.App.exe", "coreclr.dll", "PresentationFramework.dll", "START-HERE.txt", "BUILD-INFO.txt")) {
+            if (-not (Test-Path -LiteralPath (Join-Path $packageRoot $requiredFile))) { throw "Missing packaged file: $requiredFile" }
+          }
+          $env:DOTNET_ROOT = Join-Path $env:RUNNER_TEMP "no-external-dotnet"
+          $env:DOTNET_MULTILEVEL_LOOKUP = "0"
+          $appProcess = Start-Process -FilePath (Join-Path $packageRoot ATS.Dispatcher.App.exe) -ArgumentList "--smoke-test" -WorkingDirectory $packageRoot -PassThru -WindowStyle Hidden
+          if (-not $appProcess.WaitForExit(30000)) {
+            $appProcess.Kill()
+            throw "Packaged WPF startup did not finish within 30 seconds."
+          }
+          if ($appProcess.ExitCode -ne 0) { throw "Packaged WPF smoke test failed with exit code $($appProcess.ExitCode)." }
+      - name: Upload portable prototype artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ats-dispatcher-windows-prototype
+          name: ats-dispatcher-windows-portable
           path: artifacts/publish/
+          if-no-files-found: error

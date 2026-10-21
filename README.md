@@ -29,9 +29,9 @@ A Windows .NET 8 WPF desktop prototype for planning custom hauls in American Tru
 
 ## Run on Windows
 
-1. Open the latest successful [Windows build workflow](https://github.com/RealizmModz/repo1/actions/workflows/ats-dispatcher.yml) and download the `ats-dispatcher-windows-prototype` artifact.
-2. Extract the ZIP; install the **.NET 8 Desktop Runtime (x64)** if it is not already installed.
-3. Launch `ATS.Dispatcher.App.exe`.
+1. Open the latest successful [Windows build workflow](https://github.com/RealizmModz/repo1/actions/workflows/ats-dispatcher.yml) and download the `ats-dispatcher-windows-portable` artifact (GitHub sign-in may be required).
+2. Extract the **entire ZIP**. The Windows x64 .NET desktop runtime is bundled; no separate runtime install or administrator permission is needed.
+3. Launch `ATS.Dispatcher.App.exe` from the extracted folder; keep all packaged files together. Use **Getting started** for a short walkthrough.
 4. Plan a route and export a draft. Or import extracted game definitions to populate suggestions and run compatibility checks.
 5. Select a save under ATS Profile Discovery and click **Back up selected save** if you want to make a separate verified copy.
 6. For real freight reference information, use **Inspect decoded save** and select a separate `SiiNunit` text copy. Choose an offer and click **Use offer as draft template**. **Do not feed encrypted game.sii directly to this inspector.**
@@ -42,6 +42,8 @@ Build from source using the .NET 8 SDK:
 dotnet run --project src/ATS.Dispatcher.App/ATS.Dispatcher.App.csproj
 dotnet run --project tests/ATS.Dispatcher.SmokeTests/ATS.Dispatcher.SmokeTests.csproj -c Release
 ```
+
+The package includes `START-HERE.txt` and exact-commit `BUILD-INFO.txt`. CI verifies the self-contained runtime manifest and launches the packaged WPF window in `--smoke-test` mode, exercising initial cards, draft-to-map labels, search and disabled dispatch before upload. This is an automated startup/interaction check, not visual QA or proof of game integration. See [Getting started](docs/GETTING_STARTED.md) for the current usable planning workflow.
 
 ## Experimental cargo-flow mod export
 
@@ -62,7 +64,7 @@ ATS saves are often encoded as `ScsC`, `BSII` or `3nK`, which this application d
 
 For example, the independent [SII-Decrypt-cpp](https://github.com/liam-dong/SII-Decrypt-cpp) documents the form `SII_Decrypt.exe -i input.sii -o decoded.sii`. Make a verified backup first, and check that the decoder you download is trustworthy. The project does not ship or automatically execute third-party binaries.
 
-The inspector validates a bounded UTF-8 SiiNunit envelope, rejects duplicate offer IDs and conflicting tracked properties, hashes the copied source bytes, and reports missing cargo/target fields separately. Unsupported syntax is rejected; this is not a complete SII interpreter or reference-graph validator. Comparisons refuse incomplete or display-capped snapshots. See [M2 reference integrity](docs/M2_REFERENCE_INTEGRITY.md) for exact syntax limits and tests.
+The inspector validates a bounded UTF-8 SiiNunit envelope, rejects duplicate offer IDs and conflicting tracked properties, hashes the copied source bytes, and reports missing cargo/target fields separately. Unsupported syntax is rejected; this is not a complete SII interpreter or reference-graph validator. Comparisons refuse incomplete or display-capped snapshots. After import, **Offer reference report** shows exact-token links to observed top-level unit headers and marks everything else **unverified**; external definitions are never fabricated. Header presence does not prove a valid type, complete graph or playable job. Header indexing is capped at 250,000 units, with unsupported header syntax explicitly labeled partial. See [M2 reference integrity](docs/M2_REFERENCE_INTEGRITY.md) for exact syntax limits and tests.
 
 The read-only diff tool compares offer unit IDs and key properties; unrelated economy refresh/expiry can create changes and a matched ID is not sufficient for job-injection support. The reader recognizes `job_offer_data` blocks and stores a limited set of relevant reference fields. It does not parse any other profile information, never writes the save, and rejects encrypted/binary input or plaintext files over 256 MiB. If you import a template, any displayed destination text is only resolved when the matching company and city IDs exist in the imported definitions. **Copying an offer template does not create a new job in ATS.** It only improves planned cargo/trailer choices.
 

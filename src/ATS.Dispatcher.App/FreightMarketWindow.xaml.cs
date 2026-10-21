@@ -18,6 +18,7 @@ public partial class FreightMarketWindow : Window
     private GameCatalog? _catalog;
     private SaveOfferTemplate? _selectedOffer;
     private bool _ready;
+    private SaveOfferInspection? _lastInspection;
 
     public FreightMarketWindow()
     {
@@ -265,6 +266,8 @@ public partial class FreightMarketWindow : Window
         try
         {
             var inspection = SaveOfferInspector.Inspect(picker.FileName);
+            _lastInspection = inspection;
+            ReferenceReportButton.IsEnabled = true;
             _ready = false;
             try
             {
@@ -288,6 +291,26 @@ public partial class FreightMarketWindow : Window
             MessageBox.Show(ex.Message, "Offer inspection failed",
                 MessageBoxButton.OK, MessageBoxImage.Error);
         }
+    }
+
+    private void ReferenceReport_Click(object sender, RoutedEventArgs e)
+    {
+        if (_lastInspection is null) return;
+        MessageBox.Show(OfferReferenceReport.Summary(_lastInspection),
+            "Read-only reference report", MessageBoxButton.OK, MessageBoxImage.Information);
+    }
+
+    private void GettingStarted_Click(object sender, RoutedEventArgs e)
+    {
+        MessageBox.Show(
+            "1. Select an example freight card, then edit pickup, destination, cargo and trailer.\n" +
+            "2. Add waypoint cities and use Preview / validate to check your planning draft.\n" +
+            "3. Save draft JSON outside your ATS profile. Import draft reopens it later.\n\n" +
+            "For real offer research, import a separately decoded save COPY, then open Offer reference report.\n" +
+            "Advanced tools provides read-only profile discovery and separate verified backups.\n\n" +
+            "This portable prototype plans hauls; it does not create playable jobs, set payouts or change ATS GPS.\n" +
+            "The route graphic is schematic. Create ATS Job stays disabled pending in-game proof.",
+            "Getting started", MessageBoxButton.OK, MessageBoxImage.Information);
     }
 
     private void CompareSnapshots_Click(object sender, RoutedEventArgs e)

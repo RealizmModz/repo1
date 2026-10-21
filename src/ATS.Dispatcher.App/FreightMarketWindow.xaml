@@ -313,6 +313,9 @@
             </Grid.RowDefinitions>
             <WrapPanel Grid.Row="0">
                 <Button Content="Import decoded offers" Click="InspectDecoded_Click"/>
+                <Button x:Name="ReferenceReportButton" Content="Offer reference report"
+                        Click="ReferenceReport_Click" IsEnabled="False"/>
+                <Button Content="Getting started" Click="GettingStarted_Click"/>
                 <Button Content="Compare two decoded saves" Click="CompareSnapshots_Click"/>
                 <Button Content="Import game definitions" Click="ImportCatalog_Click"/>
                 <Button Content="Import draft" Click="ImportDraft_Click"/>
@@ -320,7 +323,7 @@
                         Click="SaveDraft_Click"/>
                 <Button Content="Preview / validate" Click="Preview_Click"/>
                 <Button Content="Advanced tools" Click="Advanced_Click"/>
-                <Button Content="Create ATS Job (not available)"
+                <Button x:Name="CreateJobButton" Content="Create ATS Job (not available)"
                         IsEnabled="False"
                         ToolTip="Disabled until verified in-game job injection is implemented"/>
             </WrapPanel>

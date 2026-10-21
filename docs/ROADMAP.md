@@ -49,6 +49,7 @@ A user on a supported ATS installation can:
 - [ ] Investigate game job-unit identities, references, expiry, target depot mapping, cargo, trailer and payout.
 - [x] Create a read-only before/after offer diff with synthetic tests; see [fixture protocol](M2_SAVE_FIXTURES.md).
 - [x] Add bounded offer inspection integrity checks (duplicate IDs, conflicting tracked fields, envelope structure, source hashes, missing-field/cap comparison rejection) with synthetic regressions; see [scope and remaining graph research](M2_REFERENCE_INTEGRITY.md). This does not validate complete unit references or pass G1.
+- [x] Add a bounded read-only top-level header index and exact-token offer-reference report with unverified/partial coverage labels and synthetic tests. Complete reference-graph semantics remain pending.
 - [ ] Demonstrate creating at least one *different* valid custom cargo/depot job, loading it in ATS and finishing/rolling it back.
 - [ ] Investigate whether programmatic GPS waypoints are representable/persistent; document unsupported behavior.
 - [ ] Investigate legal road-map geometry sources and map projection/city coordinates.
@@ -116,7 +117,8 @@ A user on a supported ATS installation can:
 ### M9 — Production polish and Windows release
 - [ ] Accessibility, keyboard/controller feasibility, loading feedback, errors, search responsiveness and high-DPI.
 - [ ] Final assets and UI comparison to game-inspired design reference.
-- [ ] Package Windows x64 build (installer or portable executable), legal asset review, signing if possible.
+- [x] Package a Windows x64 portable planning prototype with bundled runtime, getting-started/build identity files and an automated packaged WPF launch/interaction smoke test. This is not a v1 release.
+- [ ] Complete release packaging, legal asset review, signing if possible and real-device install/update/uninstall validation.
 - [ ] Add first-run setup, version compatibility checks, backup/recovery workflow, uninstall instructions.
 - [ ] Publish release candidate for limited testing, resolve blocker bugs, then tag v1.0.0.
 **Exit gate:** a nontechnical tester can install, create a supported ATS job and recover safely without manually editing saves.
