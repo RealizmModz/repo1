@@ -3,15 +3,92 @@ using Microsoft.Win32;
 using System.Globalization;
 using System.IO;
 using System.Windows;
+using System.Windows.Controls;
 
 namespace ATS.Dispatcher.App;
 
 public partial class MainWindow : Window
 {
+    private GameCatalog? _catalog;
+
     public MainWindow()
     {
         InitializeComponent();
         RefreshSaves();
+    }
+
+    private void ImportCatalogClick(object sender, RoutedEventArgs e)
+    {
+        var dialog = new OpenFolderDialog
+        {
+            Title = "Select extracted ATS game data folder (containing def)"
+        };
+        if (dialog.ShowDialog(this) != true) return;
+        try
+        {
+            var imported = GameCatalogImporter.Import(dialog.FolderName);
+            if (imported.Cities.Count == 0 || imported.Cargo.Count == 0)
+                throw new InvalidDataException(
+                    "No usable city/cargo definitions were found. Select an extracted game 'def' folder.");
+
+            _catalog = imported;
+            SetSuggestions(OriginInput, imported.Cities.Select(x => x.Name));
+            SetSuggestions(DestinationInput, imported.Cities.Select(x => x.Name));
+            SetSuggestions(CargoInput, imported.Cargo.Select(x => x.Name));
+            SetSuggestions(OriginCompanyInput, imported.Depots.Select(x => x.CompanyName));
+            SetSuggestions(DestinationCompanyInput, imported.Depots.Select(x => x.CompanyName));
+            SetSuggestions(TrailerInput, imported.Trailers.Select(x => x.Id)
+                .Concat(imported.Trailers.Select(x => x.BodyType))
+                .Concat(imported.Cargo.SelectMany(x => x.BodyTypes)));
+            CatalogStatus.Text = imported.Cities.Count + " cities, " +
+                imported.Cargo.Count + " cargo types, " + imported.Depots.Count +
+                " company-city depots, " + imported.Trailers.Count +
+                " trailer configurations (from " + imported.DefinitionFilesRead + " definition files).";
+            StatusMessage.Text = "Catalog loaded. Use Check compatibility before exporting.";
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(ex.Message, "Cannot import definitions",
+                MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    private static void SetSuggestions(ComboBox box, IEnumerable<string> values)
+    {
+        var previous = box.Text;
+        box.ItemsSource = values.Where(x => !string.IsNullOrWhiteSpace(x))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(x => x, StringComparer.OrdinalIgnoreCase).ToArray();
+        box.Text = previous;
+    }
+
+    private void ValidateCatalogClick(object sender, RoutedEventArgs e)
+    {
+        if (_catalog is null)
+        {
+            MessageBox.Show("Import extracted game definitions first.",
+                "Catalog required", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+        try
+        {
+            var issues = CatalogCompatibilityValidator.Check(BuildJob(), _catalog);
+            var message = issues.Count == 0
+                ? "No issues found in the imported definitions. This does NOT prove the job will work in ATS."
+                : string.Join(Environment.NewLine, issues.Take(20)) +
+                  (issues.Count > 20 ? Environment.NewLine + "(More issues omitted)" : "");
+            MessageBox.Show(message, "Catalog compatibility",
+                MessageBoxButton.OK, issues.Count == 0
+                    ? MessageBoxImage.Information : MessageBoxImage.Warning);
+            StatusMessage.Text = issues.Count == 0
+                ? "Catalog check passed (in-game compatibility unverified)."
+                : issues.Count + " potential compatibility issue(s) detected.";
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(ex.Message, "Compatibility check failed",
+                MessageBoxButton.OK, MessageBoxImage.Error);
+        }
     }
 
     private void ExportClick(object sender, RoutedEventArgs e)
@@ -26,7 +103,6 @@ public partial class MainWindow : Window
                     MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
-
             var dialog = new SaveFileDialog
             {
                 Title = "Export ATS job draft",
@@ -35,18 +111,15 @@ public partial class MainWindow : Window
                 AddExtension = true,
                 FileName = "ats-job-draft.json"
             };
-
-            if (dialog.ShowDialog(this) != true)
-                return;
-
+            if (dialog.ShowDialog(this) != true) return;
             JobFileService.Export(dialog.FileName, job);
             StatusMessage.Text = "Exported job draft: " + dialog.FileName +
-                                 " (ATS game save was not changed)";
+                                 " (ATS save was not changed)";
         }
         catch (Exception ex)
         {
-            MessageBox.Show(ex.Message, "Cannot export job", MessageBoxButton.OK,
-                MessageBoxImage.Error);
+            MessageBox.Show(ex.Message, "Cannot export job",
+                MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
@@ -57,15 +130,15 @@ public partial class MainWindow : Window
             Title = "Open ATS job draft",
             Filter = "Job draft (*.json)|*.json"
         };
-        if (dialog.ShowDialog(this) != true)
-            return;
-
+        if (dialog.ShowDialog(this) != true) return;
         try
         {
             var job = JobFileService.Import(dialog.FileName);
             NameInput.Text = job.Name;
             OriginInput.Text = job.OriginCity;
+            OriginCompanyInput.Text = job.OriginCompany;
             DestinationInput.Text = job.DestinationCity;
+            DestinationCompanyInput.Text = job.DestinationCompany;
             CargoInput.Text = job.Cargo;
             TrailerInput.Text = job.Trailer;
             PaymentInput.Text = job.PaymentUsd?.ToString(CultureInfo.CurrentCulture) ?? "";
@@ -74,18 +147,20 @@ public partial class MainWindow : Window
         }
         catch (Exception ex)
         {
-            MessageBox.Show(ex.Message, "Cannot open draft", MessageBoxButton.OK,
-                MessageBoxImage.Error);
+            MessageBox.Show(ex.Message, "Cannot open draft",
+                MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
     private void ClearClick(object sender, RoutedEventArgs e)
     {
         NameInput.Clear();
-        OriginInput.Clear();
-        DestinationInput.Clear();
-        CargoInput.Clear();
-        TrailerInput.Clear();
+        OriginInput.Text = "";
+        OriginCompanyInput.Text = "";
+        DestinationInput.Text = "";
+        DestinationCompanyInput.Text = "";
+        CargoInput.Text = "";
+        TrailerInput.Text = "";
         PaymentInput.Clear();
         WaypointsInput.Clear();
         StatusMessage.Text = "Cleared draft.";
@@ -100,15 +175,14 @@ public partial class MainWindow : Window
         {
             var documents = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
             var slots = GameProfileScanner.Scan(documents);
-            if (slots.Count == 0)
-                SavesList.Items.Add("No local saves found.");
+            if (slots.Count == 0) SavesList.Items.Add("No local saves found.");
 
             foreach (var slot in slots)
                 SavesList.Items.Add(slot.SlotName + "  •  " + slot.Format +
                     Environment.NewLine + slot.ProfileId +
                     Environment.NewLine + slot.LastModifiedUtc.ToLocalTime().ToString("g"));
-
-            StatusMessage.Text = "Found " + slots.Count + " readable save-file locations (read-only).";
+            StatusMessage.Text = "Found " + slots.Count +
+                                 " readable save-file locations (read-only).";
         }
         catch (Exception ex)
         {
@@ -126,12 +200,13 @@ public partial class MainWindow : Window
                 throw new InvalidDataException("Payout must be a valid number or blank.");
             requestedPayment = value;
         }
-
         return new DispatchJob
         {
             Name = NameInput.Text.Trim(),
             OriginCity = OriginInput.Text.Trim(),
+            OriginCompany = OriginCompanyInput.Text.Trim(),
             DestinationCity = DestinationInput.Text.Trim(),
+            DestinationCompany = DestinationCompanyInput.Text.Trim(),
             Cargo = CargoInput.Text.Trim(),
             Trailer = TrailerInput.Text.Trim(),
             PaymentUsd = requestedPayment,
