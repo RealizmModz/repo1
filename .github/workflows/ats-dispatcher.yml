@@ -3,12 +3,13 @@ name: ATS Dispatcher Windows Build
 on:
   workflow_dispatch:
   push:
-    branches: ["feat/ats-dispatcher-mvp"]
+    branches: ["main", "feat/**"]
   pull_request:
     paths:
       - "src/ATS.Dispatcher.*/**"
       - "tests/ATS.Dispatcher.*/**"
-      - "docs/GETTING_STARTED.md"
+      - "docs/**"
+      - "README.md"
       - ".github/workflows/ats-dispatcher.yml"
 
 permissions:

@@ -97,6 +97,7 @@ A user on a supported ATS installation can:
 **Exit gate:** complete planning flow with zero save writes and end-to-end UI tests.
 
 ### M7 — Safe *actual* dispatch implementation
+- [x] Add pure dry-run preflight/stage/recovery planning contracts and synthetic safety regressions; see [scope and remaining transaction work](SAVE_SAFETY_PLANNING.md). No profile writes, live environment enforcement or ATS support are implemented by this layer.
 - [ ] Build version-specific `IDispatchAdapter` on proven M2 fixture data.
 - [ ] Check ATS isn't running, profile isn't stale, and Steam Cloud cannot overwrite staged work.
 - [ ] Version/capability checks: block unsupported cargo, payout, depot or waypoint operations.

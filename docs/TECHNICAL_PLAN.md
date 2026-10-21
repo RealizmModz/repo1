@@ -77,6 +77,9 @@ Prefer offline rendering with an interchangeable map provider; WPF custom drawin
 
 ## Safe dispatch transaction (future, not yet implemented)
 
+A pure `SaveSafetyPlanner` now models preflight, backup/stage hashes, fresh-input rechecks and conservative recovery review. It has no file mutation API, trusted live observations or production dispatch adapter. See [implemented boundary and required remaining work](SAVE_SAFETY_PLANNING.md). This does not pass G1 or complete M7.
+
+
 ```text
 DRAFT
   ↓ validate selected depot/cargo/trailer/map/profile/version

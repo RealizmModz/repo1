@@ -285,6 +285,7 @@ finally
 
 OfferIntegrityTests.Run();
 BinarySaveTests.Run();
+SaveSafetyTests.Run();
 
 Console.WriteLine("All ATS Dispatcher smoke tests passed.");
 
