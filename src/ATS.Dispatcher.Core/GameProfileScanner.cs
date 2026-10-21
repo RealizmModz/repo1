@@ -72,7 +72,8 @@ public static class GameProfileScanner
             return GameSaveFormat.CompressedScs;
         if (header.SequenceEqual("BSII"u8))
             return GameSaveFormat.BinarySii;
-        if (header.SequenceEqual("3nK"u8))
+        if (header[0] == (byte)'3' && header[1] == (byte)'n' &&
+            header[2] == (byte)'K' && header[3] == 0x01)
             return GameSaveFormat.Encoded3nK;
         return GameSaveFormat.Unknown;
     }
