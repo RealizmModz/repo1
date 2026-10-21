@@ -9,6 +9,8 @@ A Windows .NET 8 WPF desktop prototype for planning custom hauls in American Tru
 
 **Status: ATS-inspired UI shell + planning + read-only offer inspection/diff + catalog checks + verified save backups + experimental cargo-flow mod export.** This is NOT yet a working in-game job injector. It does not change Freight Market offers, gameplay GPS routes, requested payouts, or ATS saves.
 
+**Development safety foundation:** [Dry-run preflight, staging and recovery review](docs/SAVE_SAFETY_PLANNING.md) now has synthetic regression coverage. It never commits/restores files or establishes ATS integration support.
+
 **Default window:** a new ATS-inspired Freight Market with schematic route visualization on the left, search/filterable cargo cards on the right, editable pickup/destination/cargo/trailer fields, reverse route, independent JSON drafts and preview validation. Initial cards are labeled **DEMO • NOT IN GAME**. Importing a separately decoded SII save replaces them with real saved job-offer references (still read-only). The graphic is a **schematic, not an ATS road map**; displayed distance from existing offers belongs to the original job, not the edited route.
 
 ## What works
