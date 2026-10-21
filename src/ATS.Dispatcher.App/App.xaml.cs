@@ -11,12 +11,12 @@ public partial class App : Application
         if (!e.Args.Contains("--smoke-test", StringComparer.Ordinal))
         {
             base.OnStartup(e);
+            new FreightMarketWindow().Show();
             return;
         }
 
         // CI-only: load the real packaged WPF window, exercise draft bindings,
         // then exit. No dialogs, profile scans, save reads/writes or network.
-        StartupUri = null;
         ShutdownMode = ShutdownMode.OnExplicitShutdown;
         base.OnStartup(e);
         try
@@ -50,15 +50,17 @@ public partial class App : Application
                         Check(!Control<Button>("CreateJobButton").IsEnabled);
                         Shutdown(0);
                     }
-                    catch
+                    catch (Exception ex)
                     {
+                        Console.Error.WriteLine(ex);
                         Shutdown(1);
                     }
                 }));
             window.Show();
         }
-        catch
+        catch (Exception ex)
         {
+            Console.Error.WriteLine(ex);
             Shutdown(1);
         }
     }

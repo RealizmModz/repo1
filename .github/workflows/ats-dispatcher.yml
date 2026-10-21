@@ -55,12 +55,16 @@ jobs:
           }
           $env:DOTNET_ROOT = Join-Path $env:RUNNER_TEMP "no-external-dotnet"
           $env:DOTNET_MULTILEVEL_LOOKUP = "0"
-          $appProcess = Start-Process -FilePath (Join-Path $packageRoot ATS.Dispatcher.App.exe) -ArgumentList "--smoke-test" -WorkingDirectory $packageRoot -PassThru -WindowStyle Hidden
+          $smokeLog = Join-Path $env:RUNNER_TEMP "ats-wpf-smoke.stderr.txt"
+          $appProcess = Start-Process -FilePath (Join-Path $packageRoot ATS.Dispatcher.App.exe) -ArgumentList "--smoke-test" -WorkingDirectory $packageRoot -PassThru -WindowStyle Hidden -RedirectStandardError $smokeLog
           if (-not $appProcess.WaitForExit(30000)) {
             $appProcess.Kill()
             throw "Packaged WPF startup did not finish within 30 seconds."
           }
-          if ($appProcess.ExitCode -ne 0) { throw "Packaged WPF smoke test failed with exit code $($appProcess.ExitCode)." }
+          if ($appProcess.ExitCode -ne 0) {
+            if (Test-Path -LiteralPath $smokeLog) { Get-Content -LiteralPath $smokeLog }
+            throw "Packaged WPF smoke test failed with exit code $($appProcess.ExitCode)."
+          }
       - name: Upload portable prototype artifact
         uses: actions/upload-artifact@v4
         with:
