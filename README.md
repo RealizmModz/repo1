@@ -1,46 +1,55 @@
 # ATS Custom Freight Dispatcher
 
-Windows desktop project for planning custom freight jobs in American Truck Simulator (ATS).
+A Windows .NET 8 WPF desktop prototype for planning custom hauls in American Truck Simulator.
 
-**Status: early prototype / job draft editor.** This build lets you create and import/export custom job drafts (including optional payouts and ordered city waypoints), detects local ATS save slots, and identifies save signatures. **It does not inject jobs into ATS, override the in-game GPS, or unlock all cargo.** Those require game-data integration and compatibility testing.
+**Status: planning + read-only catalog checks + verified save backups.** This is NOT yet a working in-game job injector. It does not change Freight Market offers, gameplay GPS routes, requested payouts, or ATS saves.
 
-## First build
+## What works
 
-- WPF desktop editor: pickup, delivery, cargo, trailer, payout and intermediate city waypoints.
-- Drafts saved as human-readable JSON; import them later.
-- Read-only search for saves under Documents/American Truck Simulator/profiles and steam_profiles.
-- Signature detection for SiiN, ScsC and BSII formats (detection is not decoding).
-- Core validation, smoke tests and Windows CI build artifact.
-- No modifications to game files. No third-party SCS tools bundled.
+- Draft a haul: origin/destination city and company, cargo, trailer configuration/body type, optional payout, intermediate city waypoints
+- Import/export independent JSON job drafts
+- Scan local ATS profile saves (read-only)
+- Create a separate SHA-256-verified backup of a selected local save
+- Import **already-extracted**, loose SCS game definition files from a folder containing \`def/\`, or from \`def/\` itself
+- Suggest cities, companies, cargo, and trailer configurations from imported data
+- Run advisory checks on cities, company depots, their inbound/outbound cargo definitions, and cargo/trailer body compatibility
+- Windows CI build, publish, and smoke tests, including synthetic fixture definitions
 
 ## Run on Windows
 
-Install the .NET 8 SDK and build with:
+1. Open the latest successful [Windows build workflow](https://github.com/RealizmModz/repo1/actions/workflows/ats-dispatcher.yml) and download the \`ats-dispatcher-windows-prototype\` artifact.
+2. Extract the ZIP; install the **.NET 8 Desktop Runtime (x64)** if it is not already installed.
+3. Launch \`ATS.Dispatcher.App.exe\`.
+4. Plan a route and export a draft. Or import extracted game definitions to populate suggestions and run compatibility checks.
+5. Select a save under ATS Profile Discovery and click **Back up selected save** if you want to make a separate verified copy.
 
-```powershell
+Build from source using the .NET 8 SDK:
+
+\`\`\`powershell
 dotnet run --project src/ATS.Dispatcher.App/ATS.Dispatcher.App.csproj
-```
-
-Smoke tests:
-
-```powershell
 dotnet run --project tests/ATS.Dispatcher.SmokeTests/ATS.Dispatcher.SmokeTests.csproj -c Release
-```
+\`\`\`
 
-GitHub Actions builds and uploads a Windows prototype artifact. The published prototype is framework-dependent: the target PC needs the appropriate .NET 8 Desktop Runtime installed.
+## Import format and known limits
 
-## Important ATS constraints
+The importer accepts loose text \`.sii\` definitions from an **already-extracted** \`def/\` tree:
+- \`def/city/*.sii\`
+- \`def/cargo/*.sii\` and \`def/cargo/<cargo>/*.sii\`
+- \`def/company/<company>.sii\`
+- \`def/company/<company>/editor/*.sii\`
+- \`def/company/<company>/in/*.sii\`, \`out/*.sii\`
 
-ATS Freight Market jobs depend on valid company depots, cargo/trailer definitions, owned map DLCs, game version, and save structure. Merely typing any location into a draft cannot force ATS to offer a job there. Waypoints in this prototype are a plan only, **not injected into the game's route advisor**. A future integration must verify city and company IDs from game data and test on supported save formats.
+It does NOT directly open \`.scs\` archives. The lightweight text parser does not yet resolve SII inheritance, includes, localization, mod override order or the active game's DLC ownership. A compatible catalog result does not establish that ATS will actually spawn a job, because depot prefab restrictions, cargo skills, geography and more may still prevent it. Waypoints remain a human-readable plan only.
 
-**Never edit an active game save in place.** Any future save-editing engine must back up and checksum the original file, reject unsupported versions, and use a temp/atomic replacement after validation.
+Your game files stay local. Do not upload game save files, license information or Steam Cloud credentials to this repository.
 
-## Next milestone
+**Important:** Save backups do not alter the original game save, but are not a substitute for testing in-game save changes. Save injection remains disabled until compatible save parsers, safe rollback and end-to-end ATS tests exist.
 
-1. Capture anonymized ATS version and local test profile data.
-2. Add compatible cargo, company and trailer catalog import.
-3. Build a version-gated job injector against known-good fixture saves.
-4. Add route waypoint conversion where ATS game data supports it.
-5. Add real in-game validation, failure-safe rollback, and release packaging.
+## SCS references
 
-This is an independent community project, not affiliated with SCS Software.
+- https://modding.scssoft.com/wiki/Documentation/Engine/Units/cargo_data
+- https://modding.scssoft.com/wiki/Documentation/Engine/Units/cargo_def
+- https://modding.scssoft.com/wiki/Documentation/Engine/Units/company_def
+- https://modding.scssoft.com/wiki/Documentation/Engine/Units/trailer_def
+
+See [roadmap](docs/ROADMAP.md). Independent community project, not affiliated with SCS Software.

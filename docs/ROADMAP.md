@@ -1,36 +1,36 @@
 # Roadmap and release gates
 
-## Stage 0: completed in prototype
-- [x] Windows WPF custom haul draft editor
-- [x] Origin, destination, cargo, trailer, payout, and ordered via-city waypoints
-- [x] JSON draft import/export with validation
-- [x] Local save discovery and header classification without modification
-- [x] Cross-platform core smoke tests and Windows build/publish workflow
+## Stage 0 — job planner (completed in prototype)
+- [x] WPF desktop route/cargo/trailer/pay draft form
+- [x] Optional pickup/delivery company fields
+- [x] JSON draft import/export
+- [x] Read-only local save discovery and SiiN / ScsC / BSII signature detection
+- [x] Windows build, publishing and smoke testing in GitHub Actions
 
-## Stage 1: game-aware catalog (not implemented)
-- [ ] Collect ATS save fixtures from a disposable local profile
-- [ ] Inspect owned DLCs and available cities, depots and trailers
-- [ ] Import game/mod cargo definitions rather than guessing IDs
-- [ ] Add user-friendly autocomplete and duplicate/invalid depot rejection
+## Stage 1 — extracted game definitions (initial implementation)
+- [x] Read loose .sii city, cargo, company and trailer definitions
+- [x] Import origin/destination company-city associations and in/out cargo
+- [x] Populate choices from the imported catalog
+- [x] Advisory validation for matching city, company, cargo and trailer; waypoint lookup
+- [x] Synthetic fixture tests for compatible/incompatible jobs
+- [ ] Interpret full SII format (includes, inheritance, locale and override semantics)
+- [ ] Cross-check true in-game mod load order, owned map DLC, and cargo skills
+- [ ] Validate unique depot prefab constraints, allowed length and trailer state restrictions
+- [ ] Compare importer output with an up-to-date real ATS installation
 
-## Stage 2: supported save editing (not implemented)
-- [ ] Decode tested save formats with version gates
-- [ ] Generate a Freight Market contract with valid save unit references
-- [ ] Write to a temporary copy; checksum and restore original on failure
-- [ ] Verify the job appears in ATS with in-game smoke tests
-- [ ] Reject editing while ATS is open
+## Stage 2 — save safety and injection (partially started)
+- [x] Create independent, checksum-verified copies of selected ATS saves
+- [x] Include read-only format signature classification
+- [ ] Gather anonymized disposable test saves with game version and active mods recorded
+- [ ] Decode known ScsC/BSII save versions, fail closed on unsupported data
+- [ ] Generate a real Freight Market job using proven cargo/trailer/company unit references
+- [ ] Detect running ATS, refuse edits, atomically write validated copy, and support rollback
+- [ ] Verify in game that job appears, starts, drives, and can be completed
 
-## Stage 3: routing and polish (not implemented)
-- [ ] Route waypoints mapping from supported ATS data
-- [ ] Saved presets, history and repeat routes
-- [ ] Map UI, distance/payout estimation and trailer compatibility
-- [ ] One-click backed-up dispatch and a signed Windows release
+## Stage 3 — routes and release (not started)
+- [ ] GPS waypoint integration where supported by ATS save data
+- [ ] Road map route UI with valid road graph
+- [ ] Saved presets and repeat jobs
+- [ ] Packaged release and usability testing
 
-## Non-goals for the first release
-- Any unsafe binary patching of ATS executable
-- Inventing cargo/depots not defined by game or enabled mods
-- Assuming user-entered waypoints automatically change ATS GPS
-
-## Verification
-- Code has build and smoke-test CI checks.
-- Save-file editing must not be advertised as available until end-to-end verified in a compatible ATS version.
+**Release gate:** No claim of working custom freight dispatch until in-game verification succeeds.
