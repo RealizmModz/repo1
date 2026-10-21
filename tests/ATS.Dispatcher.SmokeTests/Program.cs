@@ -283,6 +283,8 @@ finally
         Directory.Delete(offersFixtureRoot, recursive: true);
 }
 
+OfferIntegrityTests.Run();
+
 Console.WriteLine("All ATS Dispatcher smoke tests passed.");
 
 static void AssertThrows<T>(Action action, string message) where T : Exception

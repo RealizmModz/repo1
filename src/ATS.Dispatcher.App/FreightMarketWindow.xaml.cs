@@ -278,7 +278,10 @@ public partial class FreightMarketWindow : Window
             }
             FreightList.SelectedIndex = _cards.Count > 0 ? 0 : -1;
             MarketStatus.Text = inspection.OfferCount + " existing offer units read; " +
-                inspection.Offers.Count + " usable references. Source file unchanged.";
+                inspection.Offers.Count + " usable references; " +
+                inspection.MissingRequiredFieldsCount + " missing cargo/target" +
+                (inspection.ResultsTruncated ? " (display capped at 25,000 offers)" : "") +
+                ". Source file unchanged.";
         }
         catch (Exception ex)
         {

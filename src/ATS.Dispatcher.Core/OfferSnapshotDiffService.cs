@@ -27,6 +27,10 @@ public static class OfferSnapshotDiffService
         ArgumentNullException.ThrowIfNull(after);
         if (before.ResultsTruncated || after.ResultsTruncated)
             throw new InvalidDataException("Cannot compare truncated offer snapshots.");
+        if (before.MissingRequiredFieldsCount != 0 || after.MissingRequiredFieldsCount != 0 ||
+            before.OfferCount != before.Offers.Count || after.OfferCount != after.Offers.Count)
+            throw new InvalidDataException(
+                "Cannot compare snapshots with offers missing required cargo/target fields.");
         if (before.Format != GameSaveFormat.PlainTextSii ||
             after.Format != GameSaveFormat.PlainTextSii)
             throw new InvalidDataException("Both snapshots must be decoded text SII.");

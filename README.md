@@ -62,6 +62,8 @@ ATS saves are often encoded as `ScsC`, `BSII` or `3nK`, which this application d
 
 For example, the independent [SII-Decrypt-cpp](https://github.com/liam-dong/SII-Decrypt-cpp) documents the form `SII_Decrypt.exe -i input.sii -o decoded.sii`. Make a verified backup first, and check that the decoder you download is trustworthy. The project does not ship or automatically execute third-party binaries.
 
+The inspector validates a bounded UTF-8 SiiNunit envelope, rejects duplicate offer IDs and conflicting tracked properties, hashes the copied source bytes, and reports missing cargo/target fields separately. Unsupported syntax is rejected; this is not a complete SII interpreter or reference-graph validator. Comparisons refuse incomplete or display-capped snapshots. See [M2 reference integrity](docs/M2_REFERENCE_INTEGRITY.md) for exact syntax limits and tests.
+
 The read-only diff tool compares offer unit IDs and key properties; unrelated economy refresh/expiry can create changes and a matched ID is not sufficient for job-injection support. The reader recognizes `job_offer_data` blocks and stores a limited set of relevant reference fields. It does not parse any other profile information, never writes the save, and rejects encrypted/binary input or plaintext files over 256 MiB. If you import a template, any displayed destination text is only resolved when the matching company and city IDs exist in the imported definitions. **Copying an offer template does not create a new job in ATS.** It only improves planned cargo/trailer choices.
 
 ## Import format and known limits

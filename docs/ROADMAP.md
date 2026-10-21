@@ -48,6 +48,7 @@ A user on a supported ATS installation can:
 - [ ] Gather anonymized decoded original saves **before and after** a normal job appears/changes.
 - [ ] Investigate game job-unit identities, references, expiry, target depot mapping, cargo, trailer and payout.
 - [x] Create a read-only before/after offer diff with synthetic tests; see [fixture protocol](M2_SAVE_FIXTURES.md).
+- [x] Add bounded offer inspection integrity checks (duplicate IDs, conflicting tracked fields, envelope structure, source hashes, missing-field/cap comparison rejection) with synthetic regressions; see [scope and remaining graph research](M2_REFERENCE_INTEGRITY.md). This does not validate complete unit references or pass G1.
 - [ ] Demonstrate creating at least one *different* valid custom cargo/depot job, loading it in ATS and finishing/rolling it back.
 - [ ] Investigate whether programmatic GPS waypoints are representable/persistent; document unsupported behavior.
 - [ ] Investigate legal road-map geometry sources and map projection/city coordinates.

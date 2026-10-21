@@ -158,7 +158,8 @@ public partial class MainWindow : Window
             ReferenceOfferInput.SelectedIndex = inspection.Offers.Count > 0 ? 0 : -1;
             _selectedTemplate = null;
             ReferenceOfferStatus.Text = inspection.OfferCount + " offers scanned; " +
-                inspection.Offers.Count + " usable templates" +
+                inspection.Offers.Count + " usable templates; " +
+                inspection.MissingRequiredFieldsCount + " missing cargo/target" +
                 (inspection.ResultsTruncated ? " (list limited to first 25,000)" : "") + ".";
             StatusMessage.Text = "Inspected decoded SII in read-only mode. No changes made.";
         }
