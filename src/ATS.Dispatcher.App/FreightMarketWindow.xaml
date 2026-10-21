@@ -312,7 +312,7 @@
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
             <WrapPanel Grid.Row="0">
-                <Button Content="Import decoded offers" Click="InspectDecoded_Click"/>
+                <Button Content="Import offers from save copy" Click="InspectDecoded_Click"/>
                 <Button x:Name="ReferenceReportButton" Content="Offer reference report"
                         Click="ReferenceReport_Click" IsEnabled="False"/>
                 <Button Content="Getting started" Click="GettingStarted_Click"/>

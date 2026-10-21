@@ -259,8 +259,8 @@ public partial class FreightMarketWindow : Window
     {
         var picker = new OpenFileDialog
         {
-            Title = "Read a separately decoded copy of game.sii",
-            Filter = "Decoded SII (*.sii;*.txt)|*.sii;*.txt|All files (*.*)|*.*"
+            Title = "Read a separate copy of game.sii (plain, ScsC or BSII)",
+            Filter = "Save copy (*.sii;*.txt)|*.sii;*.txt|All files (*.*)|*.*"
         };
         if (picker.ShowDialog(this) != true) return;
         try

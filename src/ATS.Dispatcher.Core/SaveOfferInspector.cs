@@ -70,6 +70,19 @@ public static class SaveOfferInspector
         if (input.Length > MaxBytes)
             throw new InvalidDataException("Decoded save is larger than the 256 MiB inspection limit.");
 
+        Span<byte> signature = stackalloc byte[4];
+        int signatureLength = input.Read(signature);
+        input.Position = 0;
+        if (signatureLength == 4 &&
+            (signature.SequenceEqual("ScsC"u8) || signature.SequenceEqual("BSII"u8)))
+        {
+            if (input.Length > BinarySaveDocument.Limit)
+                throw new InvalidDataException("Encoded save exceeds the 64 MiB inspection limit.");
+            var bytes = new byte[checked((int)input.Length)];
+            input.ReadExactly(bytes);
+            return BinarySaveDocument.Read(bytes).ToInspection();
+        }
+
         // Do not enable BOM autodetection: it could silently switch to UTF-16.
         // The exact header below also rejects encoded/binary saves.
         var hash = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(input));
