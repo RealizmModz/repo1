@@ -4,9 +4,9 @@
 
 Read [Product Vision + UX](PRODUCT_VISION.md) for the actual finished screen, interactions and design language. Read [Technical Plan](TECHNICAL_PLAN.md) for the integration architecture, map readiness modes, testing and safe writes.
 
-**Current reality:** The existing prototype has a WPF draft editor, JSON import/export, read-only save recognition and job-offer inspection, extracted-definition catalog importer, advisory compatibility checks, independently verified save backups, and experimental \`.scs\` cargo-flow export. **It is NOT yet an in-game custom job generator and its UI is not yet the ATS-style Freight Market.** Current build CI checks do not replace in-game tests.
+**Current reality:** The existing prototype now launches an ATS-inspired schematic-map-left / offer-board-right screen (NOT verified road geometry), and also has a WPF draft editor, JSON import/export, read-only save recognition and job-offer inspection, extracted-definition catalog importer, advisory compatibility checks, independently verified save backups, and experimental `.scs` cargo-flow export. **It is NOT yet an in-game custom job generator and its UI is still a preliminary ATS-inspired shell, not the finished Freight Market.** Current build CI checks do not replace in-game tests.
 
-The plan below defines acceptance criteria, not completed features. Tasks checked \`[x]\` were implemented in prototype; game tests still required wherever indicated.
+The plan below defines acceptance criteria, not completed features. Tasks checked `[x]` were implemented in prototype; game tests still required wherever indicated.
 
 ## Definition of done — the *finished* v1
 
@@ -27,8 +27,9 @@ A user on a supported ATS installation can:
 - [x] .NET/WPF app builds through Windows GitHub Actions.
 - [x] Draft validation and JSON import/export.
 - [x] Detect ATS local save locations/signatures (read only).
-- [x] Import loose extracted \`def\` catalog; basic advisory city/depot/cargo/trailer matches.
-- [x] Inspect real \`job_offer_data\` in a separately decoded SiiNunit **copy**.
+- [x] Import loose extracted `def` catalog; basic advisory city/depot/cargo/trailer matches.
+- [x] Inspect real `job_offer_data` in a separately decoded SiiNunit **copy**.
+- [x] Compare two decoded snapshots to list added/removed/modified offer units (read-only).
 - [x] Store reference-offer IDs in draft; create SHA-256 verified standalone backups.
 - [x] Export an **experimental**, independently packaged company cargo-flow .scs mod.
 - [ ] Validate experimental mod behavior inside a disposable ATS game profile.
@@ -46,6 +47,7 @@ A user on a supported ATS installation can:
 - [ ] Establish disposable profile with version, installed DLCs and mod list recorded.
 - [ ] Gather anonymized decoded original saves **before and after** a normal job appears/changes.
 - [ ] Investigate game job-unit identities, references, expiry, target depot mapping, cargo, trailer and payout.
+- [x] Create a read-only before/after offer diff with synthetic tests; see [fixture protocol](M2_SAVE_FIXTURES.md).
 - [ ] Demonstrate creating at least one *different* valid custom cargo/depot job, loading it in ATS and finishing/rolling it back.
 - [ ] Investigate whether programmatic GPS waypoints are representable/persistent; document unsupported behavior.
 - [ ] Investigate legal road-map geometry sources and map projection/city coordinates.
@@ -62,10 +64,13 @@ A user on a supported ATS installation can:
 **Exit gate:** selecting impossible combinations is consistently blocked before dispatch.
 
 ### M4 — Build the ATS-style screen shell
-- [ ] Refactor WPF code-behind into MVVM app structure and unit-testable actions.
+- [x] Initial WPF market shell: original ATS-inspired dark layout, map-left/cards-right, editable draft and disabled dispatch.
+- [x] Read-only cards from decoded real offers, explicitly labeled illustration-only demo cards, search and basic route schematic.
+- [x] Legacy advanced tools accessible from new home screen.
+- [ ] Refactor WPF code-behind into MVVM app structure and unit-testable actions (current visual shell still uses code-behind).
 - [ ] Create top tabs: Freight Market, Cargo Market, My Presets, Custom Dispatch.
-- [ ] Implement dark charcoal panels, ATS-like selection states, tabs, compact sortable cargo cards, and search/filter bar with original assets.
-- [ ] Implement detailed cargo/trailer browser and editable right-side job inspector.
+- [ ] Finish dark panels, original assets, sorting, multi-tab behavior, advanced filters and full cargo browser (base styles and searchable cards started).
+- [ ] Implement detailed cargo/trailer browser and editable right-side job inspector (basic editable inspector started; full constraints pending).
 - [ ] Expose loading/empty/unsupported states, keyboard shortcuts, DPI/resizing and focus states.
 - [ ] Compare 1080p and 1440p captures to approved in-game reference layout.
 **Exit gate:** complete polished navigation and edit interactions with fixtures; buttons cannot falsely imply dispatch succeeds.
@@ -75,7 +80,7 @@ A user on a supported ATS installation can:
 - [ ] Render maps with pan/zoom, labels, depot pins, origin/destination, highlighted selection.
 - [ ] Click-to-select valid pickup/destination depots and add/remove/reorder waypoint chips.
 - [ ] Implement route solver on verified road data, distance/ETA, reroute/undo, unavailable-road handling.
-- [ ] Distinguish \`schematic\`, \`verified preview\` and \`applied to ATS GPS\` readiness in UI.
+- [ ] Distinguish `schematic`, `verified preview` and `applied to ATS GPS` readiness in UI.
 - [ ] Filter map by installed DLC; prevent unavailable territory from being presented as drivable.
 **Exit gate:** deterministic routes and labels match source data; no claim of game GPS control without actual proof.
 
@@ -90,7 +95,7 @@ A user on a supported ATS installation can:
 **Exit gate:** complete planning flow with zero save writes and end-to-end UI tests.
 
 ### M7 — Safe *actual* dispatch implementation
-- [ ] Build version-specific \`IDispatchAdapter\` on proven M2 fixture data.
+- [ ] Build version-specific `IDispatchAdapter` on proven M2 fixture data.
 - [ ] Check ATS isn't running, profile isn't stale, and Steam Cloud cannot overwrite staged work.
 - [ ] Version/capability checks: block unsupported cargo, payout, depot or waypoint operations.
 - [ ] Back up original, checksum, stage copy, validate graph/references, commit atomically and keep receipt.
@@ -122,7 +127,7 @@ A user on a supported ATS installation can:
 
 ## Milestone dependency graph
 
-\`\`\`text
+```text
 M0 Foundation ── M1 Design ───────┐
        └─────── M2 Integration spike [G1] ─── M3 Catalog ──────────┐
                                         M4 ATS UI shell ─────────────┤
@@ -136,7 +141,7 @@ M0 Foundation ── M1 Design ───────┐
                                          M9 v1.0 Release
                                                   ↓
                                          M10 Updates
-\`\`\`
+```
 
 M1 and M2 can run in parallel. Some M3–M6 work can run concurrently, but M7 depends on proven M2 and coherent model/UI contracts.
 
@@ -162,7 +167,7 @@ M1 and M2 can run in parallel. Some M3–M6 work can run concurrently, but M7 de
 
 ## Important constraints / definition of truthful behavior
 
-- \`cargo_def\` mod associations do **not** guarantee an offer with exact selected cities.
+- `cargo_def` mod associations do **not** guarantee an offer with exact selected cities.
 - Save format recognition/decoded offer inspection do **not** mean writing correct game jobs is supported.
 - Unlicensed SCS road geometry, art and assets cannot be repackaged as original content.
 - Not every city/company has a valid pickup/delivery depot; not every cargo fits every trailer, skill or owned DLC.

@@ -11,10 +11,10 @@ Reference: [American Truck Simulator on Steam — official screenshots](https://
 **ATS-inspired, clean-room implementation**, not a copied game UI asset pack. Build original icons, thumbnails, textures and controls and use licensed/open assets where necessary. Do not bundle SCS map data, logos, fonts, trailers or screenshots without suitable rights. No SCS affiliation implied.
 
 Visual tokens are **initial targets**, subject to screenshot comparisons:
-- Window chrome/background: near-black charcoal \`#13191F\`.
-- Raised panels: blue-charcoal \`#202B33\`; panel borders \`#3C4851\`.
-- Selected item highlight: muted amber/orange \`#E8A23A\`; focused state needs a distinct visible outline.
-- Primary text: \`#F1F3F4\`; secondary text: \`#B2BCC5\`.
+- Window chrome/background: near-black charcoal `#13191F`.
+- Raised panels: blue-charcoal `#202B33`; panel borders `#3C4851`.
+- Selected item highlight: muted amber/orange `#E8A23A`; focused state needs a distinct visible outline.
+- Primary text: `#F1F3F4`; secondary text: `#B2BCC5`.
 - Map: subdued roads, state borders, visible city labels, amber selected route. No false accuracy if using a schematic.
 - Typography: licensed system font (e.g., Segoe UI); compact, condensed-feeling headings if legitimately licensed.
 - Styling: shallow bevels, understated separators, subtle gradients, icon-led tabs and firm rectangular buttons. **Avoid a bright modern SaaS look**.
@@ -25,7 +25,7 @@ Target: readable 1920×1080, 2560×1440 and 1366×768; scalable UI/DPI; keyboard
 
 At wide desktop sizes: **map ~55% left / cargo board ~45% right**. An editable details panel appears inside or over the right column after selecting a freight card, without losing the map context.
 
-\`\`\`text
+```text
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │ ATS CUSTOM DISPATCHER                      Profile • Mod/DLC • ATS Version  │
 ├─────────────────────────────────────────────────────────────────────────────┤
@@ -46,7 +46,7 @@ At wide desktop sizes: **map ~55% left / cargo board ~45% right**. An editable d
 ├────────────────────────────────┴────────────────────────────────────────────┤
 │ Status: Validated/Incomplete/Unsupported   [Save preset] [Preview] [Dispatch]│
 └─────────────────────────────────────────────────────────────────────────────┘
-\`\`\`
+```
 
 This is a **layout concept**, not a current screenshot, route calculation, or live ATS data.
 
@@ -55,17 +55,17 @@ At narrow widths, keep the map and job list in switchable tabs and provide a col
 ## 3. Finished product interactions
 
 ### A. Map-first route editing
-1. Click a city or depot → \`Set pickup\` / \`Set delivery\` / \`Add waypoint\`.
+1. Click a city or depot → `Set pickup` / `Set delivery` / `Add waypoint`.
 2. Pickup and destination pins use distinct shapes; stop numbers show waypoint order.
-3. Route previews update with accurate road distance **only when a verified ATS-compatible graph is available**; otherwise display \`schematic / estimated\`.
+3. Route previews update with accurate road distance **only when a verified ATS-compatible graph is available**; otherwise display `schematic / estimated`.
 4. Drag or reorder waypoint chips; recalculate and show detours. Reset only the selected route, never the entire draft without confirmation.
-5. Toggle \`Fastest\`, \`Shortest\`, \`Avoid tolls\` **only if backed by supported routing data**. Never display options that pretend to change the game GPS if they don't.
+5. Toggle `Fastest`, `Shortest`, `Avoid tolls` **only if backed by supported routing data**. Never display options that pretend to change the game GPS if they don't.
 
 ### B. ATS-like Freight/Cargo Market
 - Scrollable freight cards with cargo image, cargo name, weight, pickup and destination companies/cities, price, distance, price per mile, urgency/deadline and expiry.
 - Search by city, cargo, company and compatible trailer; filters for owned trailer, load category, DLCs and distance.
-- Select a real existing job → \`Use as template\`; edit a copy so the original game's offer remains untouched.
-- \`Freight Market\` vs \`Cargo Market\` distinction: cargo market uses an owned trailer and therefore has different constraints. Do not mislabel a simulated job as a World of Trucks contract.
+- Select a real existing job → `Use as template`; edit a copy so the original game's offer remains untouched.
+- `Freight Market` vs `Cargo Market` distinction: cargo market uses an owned trailer and therefore has different constraints. Do not mislabel a simulated job as a World of Trucks contract.
 
 ### C. Right-side Custom Dispatch editor
 - **Pickup**: city + real depot/company + pickup point if available.
@@ -75,7 +75,7 @@ At narrow widths, keep the map and job list in switchable tabs and provide a col
 - **Route**: optional ordered city/depot waypoints, saved route presets and reverse journey.
 - **Economy**: estimated rate per mile, proposed payout; editable payout only if the supported dispatch backend can honor it.
 - **Review**: total distance, travel time, skills/DLC checks, trailer and depot compatibility, payout, status/warnings.
-- **Actions**: \`Save preset\`, \`Preview\`, \`Create job\`, \`Undo/restore\`. The \`Create job\` action is disabled unless all validation and tested-integration gates pass.
+- **Actions**: `Save preset`, `Preview`, `Create job`, `Undo/restore`. The `Create job` action is disabled unless all validation and tested-integration gates pass.
 
 ### D. Expected one-minute workflow
 
@@ -104,7 +104,7 @@ If the current ATS version or content prevents a requested route/cargo, the app 
 - **Missing DLC/mods**: show what is absent; never imply it is owned.
 - **Unsupported game version / save format**: editor usable as drafts; dispatch disabled.
 - **Game running / Steam Cloud conflict**: dispatch disabled with recovery guidance.
-- **Route graph unavailable**: schematic city map and explicit \`not navigable in ATS\` warning.
+- **Route graph unavailable**: schematic city map and explicit `not navigable in ATS` warning.
 - **Ready**: all checks passed and applicable backend test-verified.
 - **Dispatching**: progress stages, backup confirmation, no double-submit.
 - **Success**: generated job identity, target profile, verification instructions and backup path.

@@ -313,6 +313,7 @@
             </Grid.RowDefinitions>
             <WrapPanel Grid.Row="0">
                 <Button Content="Import decoded offers" Click="InspectDecoded_Click"/>
+                <Button Content="Compare two decoded saves" Click="CompareSnapshots_Click"/>
                 <Button Content="Import game definitions" Click="ImportCatalog_Click"/>
                 <Button Content="Import draft" Click="ImportDraft_Click"/>
                 <Button Content="Save draft JSON" Style="{StaticResource AccentButton}"

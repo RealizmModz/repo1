@@ -7,22 +7,22 @@ This supplements [Product Vision](PRODUCT_VISION.md) and the [Master Roadmap](RO
 **Desktop application**: Keep the existing C#/.NET WPF foundation. Refactor the growing MainWindow code-behind into MVVM view-models and separately testable services as part of the shell rewrite. Avoid a mandatory server, account, paid map API or always-on cloud dependency for v1.
 
 **Core components** (interfaces to implement, not current shipped APIs):
-- \`IInstallationDetector\`: locate ATS executables/content directories and record version, profiles and user-approved paths.
-- \`IProfileSnapshotService\`: immutable snapshot of selected profile, save formats, disabled/active mods and content fingerprints; avoid secrets.
-- \`IGameDefinitionProvider\`: normalized city, depot, cargo, trailer and DLC compatibility data; preserve original game IDs and source provenance.
-- \`IOfferRepository\`: import existing game offers read-only, show precise confidence and game version.
-- \`IMapDatasetProvider\`: map style + city/depot locations + available roads, with explicit dataset provenance and accuracy.
-- \`IRoutePlanner\`: road graph traversal, ETA/distance, reorderable waypoints and estimated vs verified path classification.
-- \`IJobDraftService\`: validation, templates, presets, edit history and persistence.
-- \`IDispatchAdapter\`: per-game-version capability flags; \`PreviewAsync\`, \`PreflightAsync\`, \`ApplyAsync\`, \`VerifyAsync\`, \`RollbackAsync\`.
-- \`ISaveTransaction\`: exclusive access, backup/checksum, temporary output, atomic replacement, audit log and rollback.
+- `IInstallationDetector`: locate ATS executables/content directories and record version, profiles and user-approved paths.
+- `IProfileSnapshotService`: immutable snapshot of selected profile, save formats, disabled/active mods and content fingerprints; avoid secrets.
+- `IGameDefinitionProvider`: normalized city, depot, cargo, trailer and DLC compatibility data; preserve original game IDs and source provenance.
+- `IOfferRepository`: import existing game offers read-only, show precise confidence and game version.
+- `IMapDatasetProvider`: map style + city/depot locations + available roads, with explicit dataset provenance and accuracy.
+- `IRoutePlanner`: road graph traversal, ETA/distance, reorderable waypoints and estimated vs verified path classification.
+- `IJobDraftService`: validation, templates, presets, edit history and persistence.
+- `IDispatchAdapter`: per-game-version capability flags; `PreviewAsync`, `PreflightAsync`, `ApplyAsync`, `VerifyAsync`, `RollbackAsync`.
+- `ISaveTransaction`: exclusive access, backup/checksum, temporary output, atomic replacement, audit log and rollback.
 
-An adapter must expose **capabilities** rather than a single false \`Supported\` flag:
-\`CanGenerateOffer\`, \`CanSetExactDepots\`, \`CanSetCargo\`, \`CanSetTrailer\`, \`CanOverridePayment\`, \`CanApplyWaypoints\`. UI disables features independently.
+An adapter must expose **capabilities** rather than a single false `Supported` flag:
+`CanGenerateOffer`, `CanSetExactDepots`, `CanSetCargo`, `CanSetTrailer`, `CanOverridePayment`, `CanApplyWaypoints`. UI disables features independently.
 
 ## Proposed canonical data model
 
-\`\`\`text
+```text
 ProfileSnapshot
   profileId, atsVersion, gameContentFingerprint, activeMods[]
   installedDlc[], saveFormat, isCloudEnabled, capturedAt
@@ -50,13 +50,13 @@ RoutePlan
 DispatchReceipt
   draftId, adapterId, atsVersion, originalChecksum, backupPath
   outputChecksum, appliedOfferId?, verification, timestamp, rollbackState
-\`\`\`
+```
 
 **Don't** reduce a depot to company+city alone when ATS distinguishes multiple depots or prefabs; use actual game-specific IDs after validation. Don't label geographical straight-line distance as a drivable route.
 
 ## Integration decision — spike this early
 
-**Option A: independent .scs definitions** (already experimental). Pros: supported mod packaging route; can alter some cargo eligibility. Cons: cargo_def operates at company scope, may not select precise city, cannot guarantee a freight offer, GPS routing or payout. Keep a distinct \`Cargo Availability Mod\` feature, not the real dispatcher.
+**Option A: independent .scs definitions** (already experimental). Pros: supported mod packaging route; can alter some cargo eligibility. Cons: cargo_def operates at company scope, may not select precise city, cannot guarantee a freight offer, GPS routing or payout. Keep a distinct `Cargo Availability Mod` feature, not the real dispatcher.
 
 **Option B: tested save-game dispatch adapter** (candidate for v1). Pros: potential to create exact job with real game IDs. Cons: unofficial format compatibility, expiry/time and reference integrity, Steam Cloud interactions, game version upgrades, unsupported saves. Requires fixture-backed parser, strict version gates, never edit live saves, and in-game validation.
 
@@ -69,15 +69,15 @@ DispatchReceipt
 A screenshot-like map is a **visual design goal**. True editable ATS routing needs a legal, maintainable road graph + projection / node map and mod-aware data source.
 
 Three readiness modes:
-1. \`Schematic\`: city pins and straight/curved approximations; **clearly labeled**, no mileage/guidance claims.
-2. \`Verified Route Preview\`: accurate road graph for supported ATS content, routing/search/camera; report dataset and restrictions.
-3. \`Game-Navigation Applied\`: only when evidence proves the selected waypoints actually persist in ATS GPS after loading.
+1. `Schematic`: city pins and straight/curved approximations; **clearly labeled**, no mileage/guidance claims.
+2. `Verified Route Preview`: accurate road graph for supported ATS content, routing/search/camera; report dataset and restrictions.
+3. `Game-Navigation Applied`: only when evidence proves the selected waypoints actually persist in ATS GPS after loading.
 
 Prefer offline rendering with an interchangeable map provider; WPF custom drawing or WebView2 with a local SVG/vector renderer are candidates to prototype. No automatic scraping or repackaging of SCS maps. Evaluate license and technical limits of any data extraction/renderer.
 
 ## Safe dispatch transaction (future, not yet implemented)
 
-\`\`\`text
+```text
 DRAFT
   ↓ validate selected depot/cargo/trailer/map/profile/version
 PREFLIGHT
@@ -93,7 +93,7 @@ COMMIT
 VERIFY
   ↓ confirm created offer appears in game on same profile
 SUCCESS  |  FAILURE → RESTORE VERIFIED BACKUP
-\`\`\`
+```
 
 No project may advertise "one-click dispatch" until every step is exercised under simulated failure and actual ATS on test profiles. Since ATS save data may be concurrently rewritten by Steam Cloud, explicit cloud restrictions and profile checks are critical. Backups must never be automatically deleted after a failure.
 

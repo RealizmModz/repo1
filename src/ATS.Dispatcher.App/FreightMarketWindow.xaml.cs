@@ -287,6 +287,59 @@ public partial class FreightMarketWindow : Window
         }
     }
 
+    private void CompareSnapshots_Click(object sender, RoutedEventArgs e)
+    {
+        var beforePicker = new OpenFileDialog
+        {
+            Title = "Select decoded BEFORE save (copy only)",
+            Filter = "Decoded SII (*.sii;*.txt)|*.sii;*.txt|All files (*.*)|*.*"
+        };
+        if (beforePicker.ShowDialog(this) != true) return;
+        var afterPicker = new OpenFileDialog
+        {
+            Title = "Select decoded AFTER save (copy only)",
+            Filter = "Decoded SII (*.sii;*.txt)|*.sii;*.txt|All files (*.*)|*.*"
+        };
+        if (afterPicker.ShowDialog(this) != true) return;
+        if (string.Equals(Path.GetFullPath(beforePicker.FileName),
+            Path.GetFullPath(afterPicker.FileName), StringComparison.OrdinalIgnoreCase))
+        {
+            MessageBox.Show("Choose two different decoded save copies.",
+                "Different snapshots required", MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+            return;
+        }
+
+        try
+        {
+            var before = SaveOfferInspector.Inspect(beforePicker.FileName);
+            var after = SaveOfferInspector.Inspect(afterPicker.FileName);
+            var diff = OfferSnapshotDiffService.Compare(before, after);
+            var summary = "Offers in BEFORE: " + diff.BeforeCount +
+                "\nOffers in AFTER: " + diff.AfterCount +
+                "\nAdded: " + diff.Added +
+                "\nRemoved: " + diff.Removed +
+                "\nModified: " + diff.Modified;
+            var details = diff.Changes.Take(8).Select(c =>
+                c.Kind + " • " + (c.After?.CargoUnit ?? c.Before?.CargoUnit ?? "unknown") +
+                " → " + (c.After?.Target ?? c.Before?.Target ?? "unknown"));
+            MessageBox.Show(summary + "\n\n" +
+                string.Join("\n", details) +
+                (diff.Changes.Count > 8 ? "\n(Additional changes omitted)" : "") +
+                "\n\nEconomy refresh and offer expiry can cause unrelated changes." +
+                "\nThis comparison is read-only and does not establish save write compatibility.",
+                "ATS decoded save comparison", MessageBoxButton.OK,
+                MessageBoxImage.Information);
+            MarketStatus.Text = "Compared decoded snapshots read-only: " +
+                diff.Changes.Count + " offer record changes; originals unchanged.";
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(ex.Message, "Comparison failed",
+                MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
     private void ImportCatalog_Click(object sender, RoutedEventArgs e)
     {
         var picker = new OpenFolderDialog { Title = "Choose extracted game data / def folder" };

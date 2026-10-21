@@ -7,7 +7,9 @@
 
 A Windows .NET 8 WPF desktop prototype for planning custom hauls in American Truck Simulator.
 
-**Status: planning + catalog checks + game-offer inspection + verified save backups + experimental cargo-flow mod export.** This is NOT yet a working in-game job injector. It does not change Freight Market offers, gameplay GPS routes, requested payouts, or ATS saves.
+**Status: ATS-inspired UI shell + planning + read-only offer inspection/diff + catalog checks + verified save backups + experimental cargo-flow mod export.** This is NOT yet a working in-game job injector. It does not change Freight Market offers, gameplay GPS routes, requested payouts, or ATS saves.
+
+**Default window:** a new ATS-inspired Freight Market with schematic route visualization on the left, search/filterable cargo cards on the right, editable pickup/destination/cargo/trailer fields, reverse route, independent JSON drafts and preview validation. Initial cards are labeled **DEMO • NOT IN GAME**. Importing a separately decoded SII save replaces them with real saved job-offer references (still read-only). The graphic is a **schematic, not an ATS road map**; displayed distance from existing offers belongs to the original job, not the edited route.
 
 ## What works
 
@@ -17,6 +19,8 @@ A Windows .NET 8 WPF desktop prototype for planning custom hauls in American Tru
 - Create a separate SHA-256-verified backup of a selected local save
 - **Inspect a decoded copy of `game.sii`** to read existing `job_offer_data` entries, including destination company/city tokens, cargo, trailer variant, trailer definition, units and distances
 - Choose an existing offer as a template to populate draft cargo and trailer fields; retain reference unit metadata when exporting/importing the draft
+- Read-only **Compare two decoded saves** action with added/removed/modified freight-offer unit summary (see [fixture protocol](docs/M2_SAVE_FIXTURES.md))
+- Use **Advanced tools** to open the earlier utility window for backup and experimental mod export
 - Import **already-extracted**, loose SCS game definition files from a folder containing `def/`, or from `def/` itself
 - Suggest cities, companies, cargo, and trailer configurations from imported data
 - Run advisory checks on cities, company depots, their inbound/outbound cargo definitions, and cargo/trailer body compatibility
@@ -58,7 +62,7 @@ ATS saves are often encoded as `ScsC`, `BSII` or `3nK`, which this application d
 
 For example, the independent [SII-Decrypt-cpp](https://github.com/liam-dong/SII-Decrypt-cpp) documents the form `SII_Decrypt.exe -i input.sii -o decoded.sii`. Make a verified backup first, and check that the decoder you download is trustworthy. The project does not ship or automatically execute third-party binaries.
 
-The reader recognizes `job_offer_data` blocks and stores a limited set of relevant reference fields. It does not parse any other profile information, never writes the save, and rejects encrypted/binary input or plaintext files over 256 MiB. If you import a template, any displayed destination text is only resolved when the matching company and city IDs exist in the imported definitions. **Copying an offer template does not create a new job in ATS.** It only improves planned cargo/trailer choices.
+The read-only diff tool compares offer unit IDs and key properties; unrelated economy refresh/expiry can create changes and a matched ID is not sufficient for job-injection support. The reader recognizes `job_offer_data` blocks and stores a limited set of relevant reference fields. It does not parse any other profile information, never writes the save, and rejects encrypted/binary input or plaintext files over 256 MiB. If you import a template, any displayed destination text is only resolved when the matching company and city IDs exist in the imported definitions. **Copying an offer template does not create a new job in ATS.** It only improves planned cargo/trailer choices.
 
 ## Import format and known limits
 
