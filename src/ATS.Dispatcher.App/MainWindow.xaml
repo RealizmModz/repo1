@@ -99,6 +99,7 @@
                         <TextBlock Text="Local saves found in Documents (read-only)" TextWrapping="Wrap"
                                    Foreground="#CBD5E1" Margin="0,8,0,12"/>
                         <Button Content="Scan for saves" Click="RefreshSavesClick" HorizontalAlignment="Left"/>
+                        <Button Content="Back up selected save" Click="BackupSaveClick" HorizontalAlignment="Left" ToolTip="Creates an independent checksum-verified copy without modifying ATS"/>
                     </StackPanel>
                     <TextBlock DockPanel.Dock="Bottom" TextWrapping="Wrap"
                                Foreground="#94A3B8" FontSize="12" Margin="0,12,0,0"

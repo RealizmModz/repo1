@@ -54,6 +54,17 @@ try
     File.WriteAllBytes(game, [0x00, 0x01, 0x02, 0x03]);
     Assert(GameProfileScanner.DetectFormat(game) == GameSaveFormat.Unknown,
         "Unknown signature incorrectly accepted");
+    var sourceBytes = File.ReadAllBytes(game);
+    var verifiedBackup = SaveBackupService.CreateVerifiedBackup(
+        game, Path.Combine(root, "independent-backups"));
+    Assert(File.Exists(verifiedBackup.BackupFile), "Backup was not created");
+    Assert(verifiedBackup.Bytes == sourceBytes.Length, "Backup byte count mismatch");
+    Assert(File.ReadAllBytes(verifiedBackup.BackupFile).SequenceEqual(sourceBytes),
+        "Backup changed the bytes of the ATS save");
+    Assert(File.ReadAllBytes(game).SequenceEqual(sourceBytes),
+        "Backup service unexpectedly changed the source save");
+    Assert(verifiedBackup.Sha256.Length == 64, "Missing SHA-256 checksum");
+
 }
 finally
 {

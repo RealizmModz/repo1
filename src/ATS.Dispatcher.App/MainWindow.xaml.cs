@@ -10,6 +10,7 @@ namespace ATS.Dispatcher.App;
 public partial class MainWindow : Window
 {
     private GameCatalog? _catalog;
+    private IReadOnlyList<AtsSaveSlot> _saveSlots = [];
 
     public MainWindow()
     {
@@ -166,6 +167,34 @@ public partial class MainWindow : Window
         StatusMessage.Text = "Cleared draft.";
     }
 
+    private void BackupSaveClick(object sender, RoutedEventArgs e)
+    {
+        var selected = SavesList.SelectedIndex;
+        if (selected < 0 || selected >= _saveSlots.Count)
+        {
+            MessageBox.Show("Select a save slot first, then choose a backup folder.",
+                "Select a save", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        var dialog = new OpenFolderDialog { Title = "Where should the independent ATS save backup go?" };
+        if (dialog.ShowDialog(this) != true) return;
+        try
+        {
+            var saved = SaveBackupService.CreateVerifiedBackup(
+                _saveSlots[selected].FilePath, dialog.FolderName);
+            StatusMessage.Text = "Created verified save backup: " + saved.BackupFile;
+            MessageBox.Show("Backup created and SHA-256 verified.\n\n" +
+                saved.BackupFile + "\n\nSHA-256: " + saved.Sha256,
+                "Save safely backed up", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(ex.Message, "Backup failed",
+                MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
     private void RefreshSavesClick(object sender, RoutedEventArgs e) => RefreshSaves();
 
     private void RefreshSaves()
@@ -174,7 +203,8 @@ public partial class MainWindow : Window
         try
         {
             var documents = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-            var slots = GameProfileScanner.Scan(documents);
+            _saveSlots = GameProfileScanner.Scan(documents);
+            var slots = _saveSlots;
             if (slots.Count == 0) SavesList.Items.Add("No local saves found.");
 
             foreach (var slot in slots)
