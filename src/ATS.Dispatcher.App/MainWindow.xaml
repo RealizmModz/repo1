@@ -80,6 +80,7 @@
                             <Button Content="Export job draft" Click="ExportClick" Background="#0284C7"/>
                             <Button Content="Import draft" Click="ImportClick"/>
                             <Button Content="Check compatibility" Click="ValidateCatalogClick"/>
+                            <Button Content="Export cargo-flow test mod (.scs)" Click="ExportCargoFlowModClick"/>
                             <Button Content="Clear" Click="ClearClick"/>
                         </WrapPanel>
                     </StackPanel>

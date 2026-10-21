@@ -93,6 +93,55 @@ public partial class MainWindow : Window
         }
     }
 
+    private void ExportCargoFlowModClick(object sender, RoutedEventArgs e)
+    {
+        if (_catalog is null)
+        {
+            MessageBox.Show("Import extracted game definitions first.",
+                "Catalog required", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        var confirmation = MessageBox.Show(
+            "This creates a test .scs mod using existing cargo and company definitions.\n\n" +
+            "It MAY affect which cargo selected companies ship/receive after the game refreshes its economy. " +
+            "It does NOT guarantee an exact pickup city, destination, GPS route, trailer or payout.\n\n" +
+            "Use only in a disposable ATS profile. The app will NOT install or enable the mod. Continue?",
+            "Experimental cargo availability mod", MessageBoxButton.YesNo,
+            MessageBoxImage.Warning);
+        if (confirmation != MessageBoxResult.Yes) return;
+
+        try
+        {
+            var job = BuildJob();
+            var dialog = new SaveFileDialog
+            {
+                Title = "Export experimental ATS cargo-flow mod",
+                Filter = "SCS mod (*.scs)|*.scs",
+                DefaultExt = ".scs",
+                AddExtension = true,
+                OverwritePrompt = false,
+                FileName = "ats-dispatcher-cargo-flow-test.scs"
+            };
+            if (dialog.ShowDialog(this) != true) return;
+
+            var result = CargoFlowModBuilder.Create(_catalog, job, dialog.FileName);
+            StatusMessage.Text = "Generated cargo-flow test mod (NOT installed): " + result.PackagePath;
+            MessageBox.Show(
+                "Created an independent .scs test archive:\n" + result.PackagePath +
+                "\n\nCargo: " + result.CargoId +
+                "\nShipper: " + result.OriginCompanyId +
+                "\nReceiver: " + result.DestinationCompanyId +
+                "\n\nInstall manually in a disposable profile and check game.log.txt.",
+                "Experimental mod exported", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(ex.Message, "Could not export cargo-flow mod",
+                MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
     private void InspectDecodedSaveClick(object sender, RoutedEventArgs e)
     {
         var dialog = new OpenFileDialog

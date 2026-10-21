@@ -18,6 +18,14 @@
 - [ ] Validate unique depot prefab constraints, allowed length and trailer state restrictions
 - [ ] Compare importer output with an up-to-date real ATS installation
 
+## Stage 1.5 — experimental mod export (initial implementation)
+- [x] Generate a standalone .scs ZIP with manifest and cargo_def company out/in rules
+- [x] Reject unknown or unsafe company/cargo tokens; refuse file overwrite
+- [x] Create ZIP verification tests using synthetic cargo/depot definitions
+- [ ] Validate the package inside ATS Mod Manager with a disposable profile
+- [ ] Confirm economy generation respects new cargo associations for current game version
+- [ ] Investigate company/city-specific job targeting separately
+
 ## Stage 2 — save safety and injection (partially started)
 - [x] Create independent, checksum-verified copies of selected ATS saves
 - [x] Include read-only format signature classification for SiiN, ScsC, BSII and 3nK

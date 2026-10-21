@@ -114,6 +114,37 @@ try
     Assert(CatalogCompatibilityValidator.Check(haul, catalog).Count == 0,
         "Valid imported company, cargo and trailer combo rejected");
 
+    var modFile = Path.Combine(dataRoot, "custom-test.scs");
+    var mod = CargoFlowModBuilder.Create(catalog, haul, modFile);
+    Assert(File.Exists(mod.PackagePath), "Generated cargo mod is missing");
+    Assert(mod.OriginCompanyId == "shipper" &&
+        mod.DestinationCompanyId == "receiver" && mod.CargoId == "steel",
+        "Generated cargo mod uses incorrect company/cargo IDs");
+    using (var zip = System.IO.Compression.ZipFile.OpenRead(modFile))
+    {
+        var expectedPaths = new[]
+        {
+            "manifest.sii", "description.txt",
+            "def/company/shipper/out/steel.sii",
+            "def/company/receiver/in/steel.sii"
+        };
+        Assert(expectedPaths.All(name => zip.GetEntry(name) is not null),
+            "Generated cargo mod missing required paths");
+        using var reader = new StreamReader(zip.GetEntry(
+            "def/company/shipper/out/steel.sii")!.Open());
+        var content = reader.ReadToEnd();
+        Assert(content.Contains("cargo_def : .ats_dispatch") &&
+            content.Contains("cargo: \"cargo.steel\""),
+            "Generated SII cargo association invalid");
+    }
+    AssertThrows<IOException>(() => CargoFlowModBuilder.Create(catalog, haul, modFile),
+        "Cargo mod must refuse overwrite");
+    haul.OriginCompany = "Unknown Company";
+    AssertThrows<InvalidDataException>(() => CargoFlowModBuilder.Create(catalog, haul,
+        Path.Combine(dataRoot, "invalid.scs")), "Unknown company must not produce a mod");
+    haul.OriginCompany = "Shipper";
+
+
     haul.DestinationCompany = "Shipper";
     Assert(CatalogCompatibilityValidator.Check(haul, catalog)
         .Any(x => x.Contains("Destination", StringComparison.OrdinalIgnoreCase)),
