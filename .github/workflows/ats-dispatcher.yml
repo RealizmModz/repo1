@@ -1,0 +1,32 @@
+name: ATS Dispatcher Windows Build
+
+on:
+  push:
+    branches: ["feat/ats-dispatcher-mvp"]
+  pull_request:
+    paths:
+      - "src/ATS.Dispatcher.*/**"
+      - "tests/ATS.Dispatcher.*/**"
+      - ".github/workflows/ats-dispatcher.yml"
+
+jobs:
+  windows-build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup .NET 8 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+      - name: Build desktop application
+        run: dotnet build src/ATS.Dispatcher.App/ATS.Dispatcher.App.csproj -c Release
+      - name: Run core smoke tests
+        run: dotnet run --project tests/ATS.Dispatcher.SmokeTests/ATS.Dispatcher.SmokeTests.csproj -c Release
+      - name: Publish Windows build
+        run: dotnet publish src/ATS.Dispatcher.App/ATS.Dispatcher.App.csproj -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -o artifacts/publish
+      - name: Upload prototype artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ats-dispatcher-windows-prototype
+          path: artifacts/publish/
