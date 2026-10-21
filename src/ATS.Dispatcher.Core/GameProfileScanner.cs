@@ -5,7 +5,8 @@ public enum GameSaveFormat
     Unknown,
     PlainTextSii,
     CompressedScs,
-    BinarySii
+    BinarySii,
+    Encoded3nK
 }
 
 public sealed record AtsSaveSlot(
@@ -71,6 +72,8 @@ public static class GameProfileScanner
             return GameSaveFormat.CompressedScs;
         if (header.SequenceEqual("BSII"u8))
             return GameSaveFormat.BinarySii;
+        if (header.SequenceEqual("3nK"u8))
+            return GameSaveFormat.Encoded3nK;
         return GameSaveFormat.Unknown;
     }
 }
